@@ -2,7 +2,7 @@ import classNames from 'classnames'
 import React, { useState } from 'react'
 
 interface LoginFormProps {
-  onSuccess: () => {};
+  onSuccess: () => void;
 }
 
 const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
@@ -27,14 +27,19 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
         if (!response.ok) {
           if (response.status === 400) {
             return response.json()
-              .then((json) => { throw new Error(json.detail) })
+              .then((json: { detail: string }) => { throw new Error(json.detail) })
           }
           throw new Error("Internal Server Error")
         }
         return response.json()
       })
-      .then((json) => { onSuccess() })
-      .catch((e) => { setError(e.message) })
+      .then(onSuccess)
+      .catch((e: unknown) => {
+        if ('message' in e && typeof e.message === 'string')
+          setError(e.message)
+        else
+          setError("Application Error")
+      })
       .finally(() => { setIsLoading(false) })
   }
 

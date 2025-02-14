@@ -27,3 +27,6 @@ dist-ssr
 .python-version
 env
 *.py[cod]
+
+# Node crap
+.nvmrc

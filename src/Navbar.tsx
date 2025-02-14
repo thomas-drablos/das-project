@@ -18,9 +18,9 @@ const NavItem: React.FC<NavItemProps> = ({ active, children, onClick }) => {
 interface NavbarProps {
   activePage: string;
   isLoggedIn: boolean;
-  onLogOut: () => {};
+  onLogOut: () => void;
   pages: [string];
-  setActivePage: (string) => {};
+  setActivePage: (string) => void;
 }
 
 const Navbar: React.FC<NavbarProps> = (props) => {
