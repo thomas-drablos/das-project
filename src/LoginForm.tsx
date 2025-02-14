@@ -1,5 +1,7 @@
-import classNames from 'classnames'
 import React, { useState } from 'react'
+
+import { ButtonField, InputField, Message } from './Bulma.tsx'
+import { postJson } from './util'
 
 interface LoginFormProps {
   onSuccess: () => void;
@@ -16,77 +18,41 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
     setIsLoading(true)
     setError('')
 
-    fetch('/api/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, password }),
-    })
-      .then((response) => {
-        if (!response.ok) {
-          if (response.status === 400) {
-            return response.json()
-              .then((json: { detail: string }) => { throw new Error(json.detail) })
-          }
-          throw new Error("Internal Server Error")
-        }
-        return response.json()
-      })
+    postJson('/api/login', { email, password })
       .then(onSuccess)
       .catch((e: unknown) => {
         if ('message' in e && typeof e.message === 'string')
           setError(e.message)
         else
-          setError("Application Error")
+          setError("Unexpected Application Error")
       })
       .finally(() => { setIsLoading(false) })
   }
 
   return (
     <form className="box" onSubmit={(e) => { e.preventDefault() }}>
-      <div className="field">
-        <label className="label">Email</label>
-        <div className="control">
-          <input
-            className="input"
-            onChange={(e) => { setEmail(e.target.value) }}
-            placeholder="e.g. alex@example.com"
-            type="email"
-            value={email}
-            />
-        </div>
-      </div>
-      <div className="field">
-        <label className="label">Password</label>
-        <div className="control">
-          <input
-            className="input"
-            onChange={(e) => { setPassword(e.target.value) }}
-            placeholder="**********"
-            type="password"
-            value={password}
-            />
-        </div>
-      </div>
-      <div className="field">
-      <button
-        className={classNames('button', 'is-primary', { "is-loading": isLoading })}
-        onClick={onClick}
-        >
+      <InputField
+        label="Email"
+        onChange={(e) => { setEmail(e.target.value) }}
+        placeholder="e.g. alex@example.com"
+        type="email"
+        value={email}
+        />
+      <InputField
+        label="Password"
+        onChange={(e) => { setPassword(e.target.value) }}
+        placeholder="********"
+        type="password"
+        value={password}
+        />
+      <ButtonField kind="primary" loading={isLoading} onClick={onClick}>
         Sign in
-      </button>
-      </div>
+      </ButtonField>
       {error !== '' && (
         <div className="field">
-          <article className="message is-danger">
-            <div className="message-header">
-              <p>Error</p>
-            </div>
-            <div className="message-body">
-              {error}
-            </div>
-          </article>
+          <Message header="Application Error" kind="danger">
+            {error}
+          </Message>
         </div>
       )}
     </form>
