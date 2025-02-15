@@ -35,7 +35,12 @@ const Navbar: React.FC<NavbarProps> = (props) => {
   ))
 
   const end = props.isLoggedIn && (
-    <NavItem onClick={props.onLogOut}>Log out</NavItem>
+    <NavItem onClick={props.onLogOut}>
+      Log out
+      <span className="icon">
+        <i className="fas fa-home" />
+      </span>
+    </NavItem>
   )
 
   return (
