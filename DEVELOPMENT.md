@@ -13,44 +13,40 @@
 
 3. Install javascript dependencies
 
-   ```npm ci```
+   There are 2 nested projects in this repository. The first is the front-end project,
+   located at the project root. The second is the back-end project located at `server/`.
+   Run the following command in both of these projects.
 
-4. Setup python virtual environment
+   ```npm install```
 
-   * Unix
+4. Launch front-end and back-end servers (you'll need two shells)
 
-     ```
-     python3 -m venv env
-     env/bin/pip install --upgrade pip
-     env/bin/pip install -r requirements.txt
-     ``` 
+   Start both servers by running one of the following commands in both of the shells
 
-   * Windows
+   * Development mode
+      ```
+      npm run dev
+      ```
+      This command will watch and automatically rebuild when a project file is changed. The front-end will force the browser to refresh when reloading. 
 
-     ```
-     python3 -m venv env
-     env\Scripts\pip install --upgrade pip
-     env\Scripts\pip install -r requirements.txt
-     ```
+      Does not perform full TypeScript error checking, so be sure to `build` the project periodically.
 
-5. Launch front-end and back-end servers (you'll need two shells)
+   * Non-development mode
+      ```
+      npm start
+      ```
+      Performs full TypeScript error checking and does not watch for changes.
 
-   * Unix
+5. Error checking and linting
 
+   Both front-end and back-end projects support the same commands.
+
+   To run TypeScript error checking (this seems to be stricter, so is prefered over lint)
    ```
-   # Back-end Python Server (Shell 1)
-   env/bin/fastapi dev server/main.py
-
-   # Front-end Javascript Server (Shell 2) 
-   npm run dev
+   npm run build
    ```
 
-   * Windows
-
+   To run linter
    ```
-   # Back-end Python Server (Shell 1)
-   env\Scripts\fastapi dev server\main.py
-
-   # Front-end Javascript Server (Shell 2)
-   npm run dev
+   npm run lint
    ```

@@ -1,9 +1,18 @@
-const path = require('path');
-const express = require('express');
-const session = require('express-session');
-const bodyParser = require('body-parser');
+import path from 'path';
+import express from 'express';
+import session from 'express-session';
+import bodyParser from 'body-parser';
 
-const api = require('./api.js');
+import api from './api';
+
+declare module 'express-session' {
+    interface SessionData {
+        valid: boolean,
+        expiresAt: number,
+    }
+}
+
+const port = 8000;
 
 const app = express();
 
@@ -21,8 +30,8 @@ app.use(session({
 }));
 
 app.use('/api', api);
-app.use(express.static(path.join(__dirname, '../dist')));
+// app.use(express.static(path.join(__dirname, '../dist')));
 
-app.listen(5173, () => {
-    console.log('Server is running');
+app.listen(port, () => {
+    console.log(`Server is listening on port ${port}`);
 });
