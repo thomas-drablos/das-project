@@ -12,7 +12,7 @@ usersRouter.use(express.json());
 // GET
 usersRouter.get("/", async (_req: Request, res: Response) => {
     try {
-       const Users = (await collections.Users.find({}).toArray()) as User[];
+       const Users = (await collections.users.find({}).toArray()) as User[];
 
         res.status(200).send(Users);
     } catch (error) {
@@ -26,7 +26,7 @@ usersRouter.get("/:id", async (req: Request, res: Response) => {
     try {
         
         const query = { _id: new ObjectId(id) };
-        const user = (await collections.Users.findOne(query)) as User;
+        const user = (await collections.users.findOne(query)) as User;
 
         if (user) {
             res.status(200).send(user);
@@ -40,7 +40,7 @@ usersRouter.get("/:id", async (req: Request, res: Response) => {
 usersRouter.post("/", async (req: Request, res: Response) => {
     try {
         const newUser = req.body as User;
-        const result = await collections.Users.insertOne(newUser);
+        const result = await collections.users.insertOne(newUser);
 
         result
             ? res.status(201).send(`Successfully created a new user with id ${result.insertedId}`)
@@ -57,10 +57,10 @@ usersRouter.put("/:id", async (req: Request, res: Response) => {
     const id = req?.params?.id;
 
     try {
-        const updatedGame: User = req.body as User;
+        const updatedUser: User = req.body as User;
         const query = { _id: new ObjectId(id) };
       
-        const result = await collections.Users.updateOne(query, { $set: updatedUser });
+        const result = await collections.users.updateOne(query, { $set: updatedUser });
 
         result
             ? res.status(200).send(`Successfully updated user with id ${id}`)
@@ -72,3 +72,22 @@ usersRouter.put("/:id", async (req: Request, res: Response) => {
 });
 
 // DELETE
+usersRouter.delete("/:id", async (req: Request, res: Response) => {
+    const id = req?.params?.id;
+
+    try {
+        const query = { _id: new ObjectId(id) };
+        const result = await collections.users.deleteOne(query);
+
+        if (result && result.deletedCount) {
+            res.status(202).send(`Successfully removed user with id ${id}`);
+        } else if (!result) {
+            res.status(400).send(`Failed to remove user with id ${id}`);
+        } else if (!result.deletedCount) {
+            res.status(404).send(`User with id ${id} does not exist`);
+        }
+    } catch (error) {
+        console.error(error.message);
+        res.status(400).send(error.message);
+    }
+});
