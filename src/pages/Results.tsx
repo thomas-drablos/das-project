@@ -1,6 +1,10 @@
+import { useParams } from "react-router-dom"
+
 const Results = () => {
+    const params = useParams()
+    //TODO: use params (query) to list possible vendors & link to page
     return(
-        <h1>This is the results page</h1>
+        <h1>Results for {params.query}</h1>
     )
 }
 

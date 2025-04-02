@@ -4,18 +4,22 @@ import Login from './buttons/Login.tsx'
 import Logout from './buttons/Logout.tsx'
 
 function NavigationBar() {
-    const { isAuthenticated } = useAuth0();
+    const { isAuthenticated, user } = useAuth0();
+    //TODO: check if user is an admin -> show admin buttons
     return(
         <>
+        <div>
             <nav>
                 <NavLink to="/">Home |</NavLink>
                 {isAuthenticated ? (
                     <>
-                        <NavLink to="/userprofile">Profile |</NavLink>
+                        <NavLink to="/userprofile"><button>Profile</button></NavLink>
+                        <NavLink to="/DM"><button>DM</button></NavLink>
                         <Logout/>
                     </>
                 ) : (<Login/>)}
             </nav>
+        </div>
         </>
     );
 }
