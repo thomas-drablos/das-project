@@ -7,7 +7,7 @@ const port = 8080; // default port to listen
 
 connectToDatabase()
     .then(() => {
-        app.use("/games", usersRouter);
+        app.use("/users", usersRouter);
 
         app.listen(port, () => {
             console.log(`Server started at http://localhost:${port}`);
