@@ -16,10 +16,11 @@ const LandingPage: React.FC = () => {
         src="/logo.png"
         alt="Site Logo"
         style={{
-          marginTop: "20px",
-          marginBottom: "20px",
+          marginTop: "120px",
+          marginBottom: "30px",
           maxWidth: "400px",
           height: "auto",
+          transform: "scale(1.5)",
         }}
       />
       <SearchBar />
