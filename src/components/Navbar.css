@@ -1,0 +1,20 @@
+/* src/components/Navbar.css */
+.nav-button {
+    background-color: #154734; /* UT Dallas Green */
+    color: white;
+    border: none;
+    margin-left: 5px;
+    margin-right: 5px;
+  }
+  
+  .home-button {
+    background-color: #e87500; /* UT Dallas Orange */
+  }
+  
+  .logout-button {
+    background-color: #dc3545; /* Example red for logout */
+  }
+  
+  .nav-button.active {
+    background-color: #007bff; /* Example active color */
+  }

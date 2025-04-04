@@ -1,32 +1,36 @@
-import React, { useState } from 'react'
-
-import LoginForm from './LoginForm.tsx'
-import Navbar from './Navbar.tsx'
+// src/App.tsx
+import React from "react";
+import { Auth0Provider } from "@auth0/auth0-react";
+import SearchBar from "./components/Searchbar";
+import NavBar from "./components/Navbar";
+import Results from "./pages/results";
+import LandingPage from "./pages/landing";
+import User from "./pages/user";
+import Messaging from "./pages/messaging"; //Import the DMs page
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import "bootstrap/dist/css/bootstrap.min.css";
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [activePage, setActivePage] = useState('Page1')
-
   return (
-    <>
-      <Navbar
-        activePage={activePage}
-        isLoggedIn={isLoggedIn}
-        onLogOut={() => { setIsLoggedIn(false) }}
-        pages={['Page1', 'Page2', 'Page3']}
-        setActivePage={setActivePage}
-        />
-      <section className="section">
-        {!isLoggedIn && (
-          <div className="columns is-centered">
-            <div className="column" style={{ maxWidth: '600px' }}>
-              <LoginForm onSuccess={() => { setIsLoggedIn(true) }} />
-            </div>
-          </div>
-        )}
-      </section>
-    </>
-  )
+    <Auth0Provider
+      domain="dev-olcmjrm1xuqtgb8o.us.auth0.com"
+      clientId="zqvb0HiU9R5WVx2KObs9wGepXr46sTwO"
+      authorizationParams={{ redirect_uri: window.location.origin }}
+    >
+      <Router>
+        <div>
+          <NavBar />
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/results/:query" element={<Results />} />
+            <Route path="/search" element={<SearchBar />} />
+            <Route path="/profile" element={<User />} />
+            <Route path="/dms" element={<Messaging />} /> {/* Add dms route*/}
+          </Routes>
+        </div>
+      </Router>
+    </Auth0Provider>
+  );
 }
 
-export default App
+export default App;
