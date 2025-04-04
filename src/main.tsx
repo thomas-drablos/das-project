@@ -1,18 +1,12 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import 'bulma/css/bulma.min.css'
-import '@fortawesome/fontawesome-free/css/all.min.css'
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App";
+import "./index.css";
 import "bootstrap/dist/css/bootstrap.css";
-import App from './App.tsx'
+import "@fortawesome/fontawesome-free/css/all.min.css";
 
-const root = document.getElementById('root')
-
-if (root == null) {
-  console.error("Failed to instantiate application. Unable to locate `root` element.")
-} else {
-  createRoot(root).render(
-    <StrictMode>
-      <App />
-    </StrictMode>,
-  )
-}
+ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
