@@ -1,4 +1,3 @@
-import path from 'path';
 import express from 'express';
 import session from 'express-session';
 import bodyParser from 'body-parser';
@@ -6,16 +5,27 @@ import mongoose from 'mongoose';
 
 import api from './api';
 
+import { AuthResult } from 'express-oauth2-jwt-bearer';
+
 declare module 'express-session' {
     interface SessionData {
         valid: boolean,
         expiresAt: number,
+        auth: AuthResult,
     }
 }
 
 const port = 8000;
 
 const app = express();
+
+// app.use(
+//     auth({
+//         audience: 'http://api.cometcommerce.com',
+//         issuerBaseURL: 'https://dev-olcmjrm1xuqtgb8o.us.auth0.com/',
+//         tokenSigningAlg: 'RS256',
+//     }
+//   ));
 
 app.use(bodyParser.json());
 
