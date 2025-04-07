@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+const validate = require('validator');
 const { Schema, model } = mongoose;
 const messageSchema = new Schema({
     user: Object, 
@@ -7,4 +8,5 @@ const messageSchema = new Schema({
     text: String
 });
 const Message = model('Message', messageSchema);
+module.exports = Message;
 export default Message;
