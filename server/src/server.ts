@@ -31,14 +31,10 @@ app.use(session({
 }));
 
 app.use('/api', api);
-// app.use(express.static(path.join(__dirname, '../dist')));
 
-
+require("dotenv").config()
 mongoose.set("strictQuery", false);
-mongoose.connect("mongodb+srv://cometcommerce6348:i1OlL9T3HsAp6jXc@cluster0.coh9pgj.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0", {
-  //useNewUrlParser: true,
-  //useUnifiedTopology: true,
-})
+mongoose.connect(process.env.DB_CONN_STRING || '');
 
 app.listen(port, () => {
     console.log(`Server is listening on port ${port}`);
