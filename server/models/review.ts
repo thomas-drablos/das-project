@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-const validate = require('validator');
 const { Schema, model } = mongoose;
 const reviewSchema = new Schema({
    user: Object, 
