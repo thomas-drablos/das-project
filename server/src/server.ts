@@ -2,6 +2,7 @@ import path from 'path';
 import express from 'express';
 import session from 'express-session';
 import bodyParser from 'body-parser';
+import mongoose from 'mongoose';
 
 import api from './api';
 
@@ -32,6 +33,11 @@ app.use(session({
 app.use('/api', api);
 // app.use(express.static(path.join(__dirname, '../dist')));
 
+require("dotenv").config()
+mongoose.set("strictQuery", false);
+mongoose.connect(process.env.DB_CONN_STRING || '')
+
 app.listen(port, () => {
     console.log(`Server is listening on port ${port}`);
 });
+
