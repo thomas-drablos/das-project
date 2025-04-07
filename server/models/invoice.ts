@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-const validate = require('validator');
 const { Schema, model } = mongoose;
 const invoiceSchema = new Schema({
     user: Object, 
@@ -11,5 +10,4 @@ const invoiceSchema = new Schema({
 
 });
 const Invoice = model('Invoice', invoiceSchema);
-module.exports = Invoice;
 export default Invoice;
