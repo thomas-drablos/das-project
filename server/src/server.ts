@@ -1,4 +1,5 @@
 import express from 'express';
+import dotenv from 'dotenv';
 import session from 'express-session';
 import bodyParser from 'body-parser';
 import mongoose from 'mongoose';
@@ -15,17 +16,15 @@ declare module 'express-session' {
     }
 }
 
-const port = 8000;
+console.log(dotenv.config({path: '../.env'}));
+const port = process.env.PORT || 8000;
 
+// Connect to database
+mongoose.set("strictQuery", false);
+mongoose.connect(process.env.DB_CONN_STRING || '');
+
+// Configure application
 const app = express();
-
-// app.use(
-//     auth({
-//         audience: 'http://api.cometcommerce.com',
-//         issuerBaseURL: 'https://dev-olcmjrm1xuqtgb8o.us.auth0.com/',
-//         tokenSigningAlg: 'RS256',
-//     }
-//   ));
 
 app.use(bodyParser.json());
 
@@ -43,11 +42,6 @@ app.use(session({
 app.use('/api', api);
 // app.use(express.static(path.join(__dirname, '../dist')));
 
-require("dotenv").config()
-mongoose.set("strictQuery", false);
-mongoose.connect(process.env.DB_CONN_STRING || '')
-
 app.listen(port, () => {
     console.log(`Server is listening on port ${port}`);
 });
-

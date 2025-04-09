@@ -19,6 +19,7 @@
     "classnames": "^2.5.1",
     "mongoose": "^8.13.2",
     "react": "^19.0.0",
+    "react-bootstrap": "^2.10.9",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.5.0"
   },

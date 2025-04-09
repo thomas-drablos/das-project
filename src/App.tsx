@@ -9,6 +9,7 @@ import User from "./pages/user";
 import Messaging from "./pages/messaging"; //Import the DMs page
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
+import LinkConsentPopup from "./components/LinkConsentPopup";
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
           </Routes>
         </div>
       </Router>
+      <LinkConsentPopup />
     </Auth0Provider>
   );
 }

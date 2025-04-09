@@ -15,6 +15,7 @@
   "dependencies": {
     "@auth0/auth0-react": "^2.3.0",
     "body-parser": "^2.2.0",
+    "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "express-oauth2-jwt-bearer": "^1.6.1",
     "express-session": "^1.18.1"

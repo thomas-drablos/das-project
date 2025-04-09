@@ -1,10 +1,34 @@
 // src/pages/Results.tsx
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
+import useApiToken from "../hooks/useApiToken";
+import { getJson } from "../util";
 
 const Results: React.FC = () => {
   const params = useParams<Record<string, string | undefined>>();
   const [results, setResults] = useState<any[]>([]); // Replace 'any' with your data type
+
+  const { apiToken } = useApiToken();
+  const [apiTest, setApiTest] = useState<string>('');
+
+  useEffect(() => {
+    // getJson('/api/test', apiToken)
+    //   .then(res => {
+    //     setApiTest(res as string);
+    //   })
+    //   .catch(err => console.log(err));
+    fetch('/api/test', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(apiToken && {Authorization: `Bearer ${apiToken}`}),
+      },
+    })
+      .then(res => res.text())
+      .then(text => {
+        setApiTest(text);
+      }).catch(err => console.log(err));
+  }, [apiToken]);
 
   useEffect(() => {
     if (params.query) {
@@ -48,6 +72,7 @@ const Results: React.FC = () => {
   return (
     <div>
       <h1>Results for "{params.query}"</h1>
+      <p>{apiTest}</p>
       {results.length > 0 ? (
         <ul>
           {results.map((result) => (
