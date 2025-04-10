@@ -36,7 +36,7 @@ UserController.get('/', (req: Request, res: Response) => {
     res.json(req.userInfo);
 });
 
-UserController.put('/name', async (req: Request, res: Response) => {
+UserController.post('/name', async (req: Request, res: Response) => {
     if (!req.userInfo) {
         res.status(500).send();
         return;
