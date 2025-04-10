@@ -7,12 +7,20 @@ import mongoose from 'mongoose';
 import api from './api';
 
 import { AuthResult } from 'express-oauth2-jwt-bearer';
+import { UserDetails } from './types';
 
 declare module 'express-session' {
     interface SessionData {
         valid: boolean,
         expiresAt: number,
-        auth: AuthResult,
+        auth?: AuthResult,
+        // userInfo?: UserDetails,
+    }
+}
+
+declare module 'express' {
+    interface Request {
+        userInfo?: UserDetails,
     }
 }
 

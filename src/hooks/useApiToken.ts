@@ -18,7 +18,7 @@ function useApiToken(requiresAuth: boolean = false) {
         setAuthError('');
       })
       .catch(error => {
-        setAuthError(`Error linking account: ${error}`);
+        setAuthError(`Error linking account: ${error.error}`);
         console.log(`Error getting consent to link account: ${error?.error}`);
         console.log(error);
       });
@@ -46,7 +46,8 @@ function useApiToken(requiresAuth: boolean = false) {
           setNeedsConsent(true);
         }
         else {
-          setAuthError(`Log-in error: ${error}`);
+          setAuthError(`Log-in error: ${error.error}`);
+          console.log(`Log-in error: ${error.error}`);
           console.log(error);
         }
         console.log(error);
