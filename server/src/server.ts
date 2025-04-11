@@ -1,20 +1,37 @@
-import path from 'path';
 import express from 'express';
+import dotenv from 'dotenv';
 import session from 'express-session';
 import bodyParser from 'body-parser';
 import mongoose from 'mongoose';
 
 import api from './api';
 
+import { AuthResult } from 'express-oauth2-jwt-bearer';
+import { UserDetails } from './types';
+
 declare module 'express-session' {
     interface SessionData {
         valid: boolean,
         expiresAt: number,
+        auth?: AuthResult,
+        // userInfo?: UserDetails,
     }
 }
 
-const port = 8000;
+declare module 'express' {
+    interface Request {
+        userInfo?: UserDetails,
+    }
+}
 
+console.log(dotenv.config({path: '../.env'}));
+const port = process.env.PORT || 8000;
+
+// Connect to database
+mongoose.set("strictQuery", false);
+mongoose.connect(process.env.DB_CONN_STRING || '');
+
+// Configure application
 const app = express();
 
 app.use(bodyParser.json());
@@ -33,11 +50,6 @@ app.use(session({
 app.use('/api', api);
 // app.use(express.static(path.join(__dirname, '../dist')));
 
-require("dotenv").config()
-mongoose.set("strictQuery", false);
-mongoose.connect(process.env.DB_CONN_STRING || '')
-
 app.listen(port, () => {
     console.log(`Server is listening on port ${port}`);
 });
-

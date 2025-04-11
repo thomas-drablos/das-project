@@ -2,9 +2,11 @@
 import React, { useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { Link } from "react-router-dom";
+import { useAppUser } from "../contexts/appUserContext";
 
 const NavBar: React.FC = () => {
-  const { loginWithRedirect, logout, isAuthenticated, user } = useAuth0();
+  const { loginWithRedirect, logout, isAuthenticated } = useAuth0();
+  const user = useAppUser();
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const toggleDropdown = () => {
@@ -30,7 +32,7 @@ const NavBar: React.FC = () => {
                 type="button"
                 onClick={toggleDropdown}
               >
-                {user?.nickname || "User"}
+                {user.loading ? '...' : (user.name || 'User')}
               </button>
               {dropdownOpen && (
                 <ul className="dropdown-menu show">
