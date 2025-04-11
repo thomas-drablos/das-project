@@ -1,12 +1,18 @@
-export async function getJson<T>(url: string): Promise<T> {
-  return await request(url, { method: 'GET' })
+export async function getJson<T>(url: string, authToken?: string): Promise<T> {
+  return await request(url, {
+    method: 'GET',
+    headers: (authToken ? {
+      Authorization: `Bearer ${authToken}`,
+    } : {}),
+  });
 }
 
-export async function postJson<T>(url: string, payload: unknown): Promise<T> {
+export async function postJson<T>(url: string, payload: unknown, authToken?: string): Promise<T> {
   return await request(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      ...(authToken && {Authorization: `Bearer ${authToken}`}),
     },
     body: JSON.stringify(payload),
   })
@@ -14,7 +20,7 @@ export async function postJson<T>(url: string, payload: unknown): Promise<T> {
 
 interface RequestProps {
   method: 'GET' | 'POST';
-  headers?: { 'Content-Type': string };
+  headers?: {[k: string]: string}
   body?: string;
 }
 

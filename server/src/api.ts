@@ -1,66 +1,83 @@
-// const express = require('express');
-// const router = express.Router();
 import { Router, Request, Response, NextFunction } from 'express';
 // import { Request } from 'express-session';
-import User from '../models/user';
-import Chat from '../models/chat';
-import Invoice from '../models/invoice';
-import Login from '../models/login';
-import Message from '../models/message';
-import Review from '../models/review';
-import Vendor from '../models/vendor';
+import User from './models/user';
+import Chat from './models/chat';
+import Invoice from './models/invoice';
+import Login from './models/login';
+import Message from './models/message';
+import Review from './models/review';
+import Vendor from './models/vendor';
 
+import { requireAuth } from './auth';
+import UserController from './userController';
+import { randomUUID } from 'crypto';
 
 const router: Router = Router();
 
-router.post('/login', (req: Request, res: Response) => {
-    console.log('login');
+router.use('/user/:id', UserController);
+
+router.get('/userinfo', requireAuth, async (req: Request, res: Response) => {
+    const id = req.auth!.payload.sub!;
+    const user = await User.findOne({auth0Id: id}, 'userId name');
+    res.send({
+        exists: (user !== null),
+        userId: user?.userId ?? '',
+        name: user?.name ?? '',
+    });
+});
+
+router.post('/register', requireAuth, async (req: Request, res: Response) => {
+    const name = req.body.name;
     const email = req.body.email;
-    if (email === 'admin@email.com') {
-        req.session.valid = true;
-        req.session.expiresAt = Date.now() + (req.session.cookie.maxAge ?? 3600000);
-        console.log('User authenticated');
-        res.json({
-            username: 'Admin',
-            isAdmin: false,
-            validUntil: req.session.expiresAt,
+    const sub = req.auth!.payload.sub!;
+
+    const preexisting = await User.exists({ auth0Id: sub }).exec();
+
+    // TODO: critical, fix /userinfo request
+
+    // Check if user info conflicts with user provided information
+    // const authResponse = await authUserInfo.getUserInfo(req.auth!.token);
+    // const userInfo = authResponse.data;
+    // if (name !== (userInfo.preferred_username || userInfo.nickname || userInfo.name) ||
+    //     email !== userInfo.email ||
+    //     sub !== userInfo.sub) {
+    //     res.status(400).send('Invalid user information');
+    //     return;
+    // }
+
+    let newUser = true;
+    let userId: string;
+    // If user hasn't already been created, enter to database
+    if (preexisting === null) {
+        // In astronomical chance a UUID collision occurs, throw opaque internal error
+        const uuid = randomUUID();
+        if ((await User.exists({ userId: uuid })) !== null) {
+            res.status(500).send('Internal server error');
+            return;
+        }
+
+        const user = new User({
+            name,
+            email,
+            auth0Id: sub,
+            userId: uuid,
         });
-        return;
+
+        user.save();
+        userId = user.userId;
+    }
+    else {
+        // If this is a duplicate registration, fetch userId from the database
+        const user = await User.findOne({ auth0Id: sub }, 'userId');
+        userId = user?.userId!;
+        newUser = false;
     }
 
-    console.log('user not authenticated');
-    res.status(400).send('Invalid username or password');
-});
-
-// block unauthenticated requests
-router.use((req: Request, res: Response, next: NextFunction) => {
-    if (req.session.valid && (req.session.expiresAt ?? 0) >= Date.now()) {
-        next();
-        return;
-    }
-
-    res.status(401).send('Unauthenticated');
-});
-
-router.post('/logout', (req: Request, res: Response) => {
-    if (!req.session.valid) {
-        res.status(400).send('Not logged in');
-        return;
-    }
-
-    req.session.destroy(err => console.log(err));
-    res.send();
-});
-
-router.get('/test', (req: Request, res: Response) => {
-    res.send('Ping!');
-});
-
-router.get('/user', async (req: Request, res: Response) => {
-    const u = new User({
-        name: "John Doe",
-      });
-    await u.save();
+    res.json({
+        name,
+        userId,
+        newUser,
+    });
 });
 
 router.get('/chat', async (req: Request, res: Response) => {
@@ -75,14 +92,6 @@ router.get('/invoice', async (req: Request, res: Response) => {
         specs: "Painting of my dog pls :P"
       });
     await i.save();
-});
-
-router.get('/login', async (req: Request, res: Response) => {
-    const l = new Login({
-        time: new Date(), 
-        failed: true
-      });
-    await l.save();
 });
 
 router.get('/message', async (req: Request, res: Response) => {
