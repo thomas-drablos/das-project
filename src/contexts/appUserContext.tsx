@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react"
-import useApiToken from "./hooks/useApiToken";
-import { getJson, postJson } from "./util";
+import { useApiToken } from "./apiTokenContext";
+import { getJson, postJson } from "../util";
 import { useAuth0 } from "@auth0/auth0-react";
 
 export interface AppUser {
@@ -9,9 +9,9 @@ export interface AppUser {
   name?: string
 }
 
-const AppUserContext = createContext<AppUser|undefined>({loading: true});
+const AppUserContext = createContext<AppUser|undefined>(undefined);
 
-export const AppUserProvider = ({children}: React.ProviderProps<AppUser|undefined>) => {
+export const AppUserProvider = ({children}: React.PropsWithChildren) => {
   const { apiToken } = useApiToken();
   const { user } = useAuth0();
   const [ value, setValue ] = useState<AppUser>({loading: true});
@@ -58,7 +58,7 @@ export const AppUserProvider = ({children}: React.ProviderProps<AppUser|undefine
   return <AppUserContext.Provider value={value}>{children}</AppUserContext.Provider>
 }
 
-export function useAppUser() {
+export function useAppUser(): AppUser {
   const value = useContext(AppUserContext);
   if (value === undefined) {
     throw new Error('useAppUser must be within an AppUserProvider');

@@ -1,6 +1,6 @@
 import { useAuth0 } from "@auth0/auth0-react";
 import React from "react";
-import useApiToken from "../hooks/useApiToken";
+import { useApiToken } from "../contexts/apiTokenContext";
 import { Button, Modal, Toast, ToastBody, ToastContainer } from "react-bootstrap";
 
 const LinkConsentPopup: React.FC = () => {
