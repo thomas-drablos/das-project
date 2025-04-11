@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+const validate = require('validator');
 const { Schema, model } = mongoose;
 const vendorSchema = new Schema({
     name: String, 
