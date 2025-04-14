@@ -5,8 +5,8 @@ import User, { userSchema, IUser } from './user';
 
 
 export interface IChat extends Document {
-  vendor: Types.ObjectId | IUser;
-  user: Types.ObjectId | IUser;
+  vendor: IVendor;
+  user: IUser;
   time: Date;
   messages: IMessage[];
   invoices: IInvoice[];
