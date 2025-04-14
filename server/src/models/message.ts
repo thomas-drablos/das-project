@@ -1,37 +1,23 @@
-import mongoose, { Schema, Document, model } from 'mongoose';
+import mongoose, { Schema, Document, model, Types } from 'mongoose';
+import { IUser } from './user';
 
 export interface IMessage extends Document {
-  user: {
-    id: string;
-    name: string;
-    email?: string;
-  };
-  vendor: {
-    id: string;
-    name: string;
-    email?: string;
-  };
+  user: IUser;
+  vendor: IUser;
   time: Date;
   text: string;
 }
 
 export const messageSchema = new Schema<IMessage>(
   {
-    user: {
-      id: { type: String, required: true },
-      name: { type: String, required: true },
-      email: { type: String },
-    },
-    vendor: {
-      id: { type: String, required: true },
-      name: { type: String, required: true },
-      email: { type: String },
-    },
+    user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    vendor: {type: Schema.Types.ObjectId, ref: 'Vendor', required: true },
     time: { type: Date, default: Date.now },
     text: { type: String, required: true },
   },
-  { timestamps: true }
+  { timestamps: true } 
 );
 
 const Message = model<IMessage>('Message', messageSchema);
+module.exports = Message;
 export default Message;

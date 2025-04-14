@@ -1,16 +1,9 @@
-import mongoose, { Schema, Document, model } from 'mongoose';
+import mongoose, { Schema, Document, model, Types } from 'mongoose';
+import { IUser } from './user';
 
 export interface IInvoice extends Document {
-  user: {
-    id: string;
-    name: string;
-    email?: string;
-  };
-  vendor: {
-    id: string;
-    name: string;
-    email?: string;
-  };
+  user: Types.ObjectId | IUser;
+  vendor: Types.ObjectId | IUser;
   time: Date;
   price: number;
   paid: boolean;
