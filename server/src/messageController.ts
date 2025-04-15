@@ -65,7 +65,8 @@ MessageController.get('/:id', verifyMessageAccess, async (req, res) => {
 
 // POST /create - create a new message
 MessageController.post('/create', async (req, res) => {
-  const auth0Id = req.auth?.payload.sub;
+  try {
+    const auth0Id = req.auth?.payload.sub;
   const { vendor, chat, text } = req.body;
 
   if (!vendor || !chat || !text) {
@@ -91,6 +92,10 @@ MessageController.post('/create', async (req, res) => {
   });
 
   res.status(201).json(message);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Failed to create message');
+  }
 });
 
 export default MessageController;

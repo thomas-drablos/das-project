@@ -3,8 +3,6 @@ import { requireAuth } from './auth';
 import Chat from './models/chat';
 import User from './models/user';
 import Vendor from './models/vendor';
-
-// types/express/index.d.ts
 import { IChat } from './models/chat';
 import { IMessage } from './models/message';
 

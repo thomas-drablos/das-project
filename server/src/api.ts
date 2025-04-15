@@ -13,12 +13,16 @@ import UserController from './userController';
 import VendorController from './vendorController';
 import ReviewController from './reviewController';
 import { randomUUID } from 'crypto';
+import ChatController from './chatController';
+import MessageController from './messageController';
 
 const router: Router = Router();
 
 router.use('/user/:id', UserController);
 router.use('/vendor', VendorController);
 router.use('/review', ReviewController);
+router.use('/chat', ChatController);
+router.use('/message', MessageController)
 
 router.get('/userinfo', requireAuth, async (req: Request, res: Response) => {
     const id = req.auth!.payload.sub!;
