@@ -13,6 +13,7 @@ export interface IMessage extends Document {
   };
   time: Date;
   text: string;
+  sender?: 'user' | 'vendor';
 }
 
 export const messageSchema = new Schema<IMessage>(
