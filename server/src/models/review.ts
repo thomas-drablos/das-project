@@ -1,9 +1,10 @@
 import mongoose, { Schema, Document, model, Types } from 'mongoose';
 import User, { IUser } from './user';
+import { IVendor } from './vendor';
 
 export interface IReview extends Document {
   user: IUser;
-  vendor: Types.ObjectId | IUser;
+  vendor: IVendor;
   text: string;
   rating: number;
   time: Date;
@@ -11,7 +12,7 @@ export interface IReview extends Document {
 
 export const reviewSchema = new Schema<IReview>(
   {
-    user: { type: User, ref: 'User', required: true },
+    user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     vendor: { type: Schema.Types.ObjectId, ref: 'Vendor', required: true },
     text: { type: String, required: true },
     rating: {
