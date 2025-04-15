@@ -19,11 +19,8 @@ VendorController.get('/all', async (req, res) => {
   const auth0Id = req.auth?.payload.sub;
   //find user object
   const userObj = await User.findOne({ auth0Id });
-  if(!userObj){
-    res.status(404).send("User not found.");
-    return;
-  }
-  if(!userObj.isAdmin){
+
+  if(!userObj || !userObj.isAdmin){
     res.status(403).send("Forbidden");
     return;
   }
