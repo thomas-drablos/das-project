@@ -2,6 +2,7 @@ import mongoose, { Schema, Document, model, Types } from 'mongoose';
 import { IMessage, messageSchema } from './message';
 import { IInvoice, invoiceSchema } from './invoice';
 import User, { userSchema, IUser } from './user';
+import { IVendor } from './vendor';
 
 
 export interface IChat extends Document {
