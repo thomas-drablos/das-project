@@ -8,6 +8,9 @@ import api from './api';
 
 import { AuthResult } from 'express-oauth2-jwt-bearer';
 import { UserDetails } from './types';
+import { IChat } from './models/chat';
+import { IReview } from './models/review';
+import { IMessage } from './models/message';
 
 declare module 'express-session' {
     interface SessionData {
@@ -21,6 +24,9 @@ declare module 'express-session' {
 declare module 'express' {
     interface Request {
         userInfo?: UserDetails,
+        chat?: IChat, 
+        review?: IReview,
+        message?: IMessage,
     }
 }
 
