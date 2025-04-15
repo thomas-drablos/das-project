@@ -60,6 +60,12 @@ ReviewController.post('/create', async (req, res) => {
     rating,
     time: new Date()
   });
+  await review.save();
+  
+  //just to make sure 
+  const returnReview = await Review.findById(review._id)
+  .populate('user', 'name')   //returning only user and vendor name, may change
+  .populate('vendor', 'name');
 
   res.status(201).json(review);
 });
