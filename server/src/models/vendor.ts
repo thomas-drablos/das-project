@@ -1,6 +1,9 @@
 import mongoose, { Schema, Document, model } from 'mongoose';
+import { IReview, reviewSchema } from './review';
+import { IUser } from './user';
 
 export interface IVendor extends Document {
+  user: IUser;
   name: string;
   photos: string[]; // URLs to images
   description: string;
@@ -11,11 +14,12 @@ export interface IVendor extends Document {
 
 const vendorSchema = new Schema<IVendor>(
   {
+    user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     name: { type: String, required: true },
     photos: { type: [String], default: [] },
     description: { type: String },
     tags: { type: [String], default: [] },
-    reviews: { type: [Schema.Types.Mixed], default: [] }, // replace with subdocument or ObjectId later
+    reviews: [reviewSchema],
     hidden: { type: Boolean, default: false }
   },
   { timestamps: true }

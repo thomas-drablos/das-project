@@ -1,18 +1,12 @@
 import mongoose, { Schema, Document, model } from 'mongoose';
 import { IMessage, messageSchema } from './message';
 import { IInvoice, invoiceSchema } from './invoice';
+import User, { userSchema, IUser } from './user';
+import { IVendor } from './vendor';
 
 export interface IChat extends Document {
-  vendor: {
-    id: string;
-    name: string;
-    email?: string;
-  };
-  user: {
-    id: string;
-    name: string;
-    email?: string;
-  };
+  vendor: IVendor;
+  user: IUser;
   time: Date;
   messages: IMessage[];
   invoices: IInvoice[];
@@ -20,16 +14,8 @@ export interface IChat extends Document {
 
 const chatSchema = new Schema<IChat>(
   {
-    vendor: {
-      id: { type: String, required: true },
-      name: { type: String, required: true },
-      email: { type: String },
-    },
-    user: {
-      id: { type: String, required: true },
-      name: { type: String, required: true },
-      email: { type: String },
-    },
+    vendor: { type: Schema.Types.ObjectId, ref: 'Vendor', required: true},
+    user: { type: Schema.Types.ObjectId, ref: 'User', required: true},
     time: { type: Date, default: Date.now },
     messages: [messageSchema],
     invoices: [invoiceSchema],

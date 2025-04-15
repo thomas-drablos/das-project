@@ -1,6 +1,8 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { requireAuth } from './auth';
 import Review from './models/review';
+import User, { IUser } from './models/user';
+import Vendor from './models/vendor';
 
 const ReviewController: Router = Router({ mergeParams: true });
 
@@ -11,51 +13,86 @@ const verifyReviewAccess = async (req: Request, res: Response, next: NextFunctio
   const reviewId = req.params.id;
   const auth0Id = req.auth?.payload.sub;
 
-  const review = await Review.findById(reviewId);
-  if (!review) return res.status(404).send('Review not found');
+  const review = await Review.findById(reviewId)
+  .populate('user')
+  .populate('vendor')
+  .populate('vendor.user');
+  if (!review) {
+    res.status(404).send('Review not found');
+    return;
+  }
 
-  if (review.user.id !== auth0Id && review.vendor.id !== auth0Id) {
-    return res.status(403).send('Forbidden');
+  if (review.user.auth0Id !== auth0Id && (review.populated('vendor')?.populated('user') as IUser).auth0Id !== auth0Id) {
+    res.status(403).send('Forbidden');
+    return;
   }
 
   req.review = review;
   next();
 };
 
-// GET / - get all reviews for logged-in user or vendor
+// GET / - get all reviews made by logged-in user
 ReviewController.get('/', async (req, res) => {
   const auth0Id = req.auth?.payload.sub;
 
-  const reviews = await Review.find({
-    $or: [
-      { 'user.id': auth0Id },
-      { 'vendor.id': auth0Id }
-    ]
-  }).sort({ time: -1 });
+  //find user
+  const user = await User.findOne({ auth0Id });
+  if(!user){
+    res.status(404).send("No user found");
+    return
+  }
+
+  const reviews = await Review.find({ user: user._id})
+  .sort({ time: -1 })
+  .populate(['user', 'vendor'])
+  .select('user.name vendor.name text rating time');
 
   res.json(reviews);
 });
 
-// GET /:id - get a single review
+// GET /:id - get a single review by id
 ReviewController.get('/:id', verifyReviewAccess, async (req, res) => {
-  res.json(req.review);
+  try {
+    const review = req.review; //TODO: type error
+  } catch (err) {
+    res.status(500).send("Failed to fetch review");
+  }
 });
 
 // POST /create - post a new review
-ReviewController.post('/create', async (req, res) => {
-  const { user, vendor, text, rating } = req.body;
+//assumption: passing vendor id in body
+ReviewController.post('/create', verifyReviewAccess, async (req, res) => {
+  const auth0Id = req.auth?.payload.sub;
+  const { vendor, text, rating } = req.body;
 
-  if (!user || !vendor || !text || rating == null) {
-    return res.status(400).send('Missing required fields');
+  if (!vendor || !text || rating == null) {
+    res.status(400).send('Missing required field(s)');
+    return;
   }
 
   if (typeof rating !== 'number' || rating < 1 || rating > 5) {
-    return res.status(400).send('Rating must be a number between 1 and 5');
+    res.status(400).send('Rating must be a number between 1 and 5');
+    return;
   }
 
+ //find user object
+ const userObj = await User.findOne({ auth0Id });
+ if(!userObj){
+   res.status(404).send("User not found.");
+   return;
+ }
+
+ //find vendor object
+ const vendorObj = await Vendor.findById(vendor);
+ if(!vendorObj){
+   res.status(404).send("Vendor not found.");
+   return;
+ }
+
+ //create new review
   const review = await Review.create({
-    user,
-    vendor,
+    user: userObj._id,
+    vendor: vendorObj._id,
     text,
     rating,
     time: new Date()
@@ -67,7 +104,8 @@ ReviewController.post('/create', async (req, res) => {
   .populate('user', 'name')   //returning only user and vendor name, may change
   .populate('vendor', 'name');
 
-  res.status(201).json(review);
+  res.status(201).json(returnReview);
 });
 
+//TODO: additional fucntionality: update and delete reviews
 export default ReviewController;

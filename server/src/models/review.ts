@@ -1,16 +1,10 @@
 import mongoose, { Schema, Document, model } from 'mongoose';
+import User, { IUser } from './user';
+import { IVendor } from './vendor';
 
 export interface IReview extends Document {
-  user: {
-    id: string;
-    name: string;
-    email?: string;
-  };
-  vendor: {
-    id: string;
-    name: string;
-    email?: string;
-  };
+  user: IUser;
+  vendor: IVendor;
   text: string;
   rating: number;
   time: Date;
@@ -18,16 +12,8 @@ export interface IReview extends Document {
 
 export const reviewSchema = new Schema<IReview>(
   {
-    user: {
-      id: { type: String, required: true },
-      name: { type: String, required: true },
-      email: { type: String },
-    },
-    vendor: {
-      id: { type: String, required: true },
-      name: { type: String, required: true },
-      email: { type: String },
-    },
+    user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    vendor: { type: Schema.Types.ObjectId, ref: 'Vendor', required: true},
     text: { type: String, required: true },
     rating: {
       type: Number,
@@ -41,4 +27,5 @@ export const reviewSchema = new Schema<IReview>(
 );
 
 const Review = model<IReview>('Review', reviewSchema);
+module.exports = Review;
 export default Review;
