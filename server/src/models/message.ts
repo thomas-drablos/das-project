@@ -21,5 +21,4 @@ export const messageSchema = new Schema<IMessage>(
 );
 
 const Message = model<IMessage>('Message', messageSchema);
-module.exports = Message;
 export default Message;

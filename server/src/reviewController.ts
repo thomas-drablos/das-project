@@ -57,11 +57,11 @@ ReviewController.get('/:id', verifyReviewAccess, async (req, res) => {
   } catch (err) {
     res.status(500).send("Failed to fetch review");
   }
+  res.json(review);
 });
 
 // POST /create - post a new review
-//assumption: passing vendor id in body
-ReviewController.post('/create', verifyReviewAccess, async (req, res) => {
+ReviewController.post('/create', async (req, res) => {
   const auth0Id = req.auth?.payload.sub;
   const { vendor, text, rating } = req.body;
 
@@ -98,6 +98,8 @@ ReviewController.post('/create', verifyReviewAccess, async (req, res) => {
     time: new Date()
   });
   await review.save();
+
+  //TODO: add to vendor account
   
   //just to make sure 
   const returnReview = await Review.findById(review._id)

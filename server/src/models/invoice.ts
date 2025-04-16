@@ -1,16 +1,10 @@
 import mongoose, { Schema, Document, model } from 'mongoose';
+import { IUser } from './user';
+import { IVendor } from './vendor';
 
 export interface IInvoice extends Document {
-  user: {
-    id: string;
-    name: string;
-    email?: string;
-  };
-  vendor: {
-    id: string;
-    name: string;
-    email?: string;
-  };
+  user: IUser;
+  vendor: IVendor;
   time: Date;
   price: number;
   paid: boolean;
@@ -19,16 +13,8 @@ export interface IInvoice extends Document {
 
 export const invoiceSchema = new Schema<IInvoice>(
   {
-    user: {
-      id: { type: String, required: true },
-      name: { type: String, required: true },
-      email: { type: String },
-    },
-    vendor: {
-      id: { type: String, required: true },
-      name: { type: String, required: true },
-      email: { type: String },
-    },
+    user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    vendor:{ type: Schema.Types.ObjectId, ref: 'Vendor', required: true },
     time: { type: Date, default: Date.now },
     price: { type: Number, required: true },
     paid: { type: Boolean, default: false },
