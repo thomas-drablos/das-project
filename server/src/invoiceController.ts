@@ -11,16 +11,26 @@ const verifyInvoiceAccess = async (req: Request, res: Response, next: NextFuncti
   const invoiceId = req.params.id;
   const auth0Id = req.auth?.payload.sub;
 
-  const invoice = await Invoice.findById(invoiceId);
+  const invoice = await Invoice.findById(invoiceId)
+    .populate('user')
+    .populate({
+      path: 'vendor',
+      populate: { path: 'user' }
+    });
+
   if (!invoice) return res.status(404).send('Invoice not found');
 
-  if (invoice.user.id !== auth0Id && invoice.vendor.id !== auth0Id) {
+  const userAuth0Id = invoice.user?.auth0Id;
+  const vendorAuth0Id = (invoice.vendor as any)?.user?.auth0Id;
+
+  if (userAuth0Id !== auth0Id && vendorAuth0Id !== auth0Id) {
     return res.status(403).send('Forbidden');
   }
 
   req.invoice = invoice;
   next();
 };
+
 
 // GET / - get all invoices for the logged-in user
 InvoiceController.get('/', async (req, res) => {

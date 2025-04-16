@@ -26,11 +26,12 @@ const verifyChatAccess = async (req: Request, res: Response, next: NextFunction)
 
   const chat = await Chat.findById(chatId)
     .populate('user', 'name email')
-    .populate('vendor', 'name email');
+    .populate('vendor', 'name');
 
   if (!chat) return res.status(404).send('Chat not found');
 
-  if (chat.user.id !== auth0Id && chat.vendor.id !== auth0Id) {
+  if (chat.user.auth0Id !== auth0Id && chat.vendor.user.auth0Id !== auth0Id)
+    {
     return res.status(403).send('Forbidden');
   }
 
@@ -67,22 +68,24 @@ ChatController.get('/:id', verifyChatAccess, async (req, res) => {
 
 // POST /create - basic create chat
 ChatController.post('/create', async (req, res) => {
-  const { user, vendor } = req.body;
+  const { vendor } = req.body;
 
-  if (!user || !vendor) return res.status(400).send('Missing user or vendor');
+  if (!vendor) return res.status(400).send('Missing vendor');
 
-  // Validate existence of user and vendor
-  const userObj = await User.findOne({ userId: user.id });
-  if (!userObj) return res.status(404).send('User not found');
+  const auth0Id = req.auth?.payload.sub;
+  const userObj = await User.findOne({ auth0Id });
+
+  if (!userObj) return res.status(404).send('Authenticated user not found');
 
   const vendorObj = await Vendor.findById(vendor.id);
   if (!vendorObj) return res.status(404).send('Vendor not found');
 
   // Prevent duplicate chat between same user and vendor
   const existingChat = await Chat.findOne({
-    'user.id': user.id,
+    'user.id': userObj.auth0Id,
     'vendor.id': vendor.id
   });
+    
   if (existingChat) {
     return res.status(409).json({ message: 'Chat already exists', chat: existingChat });
   }
