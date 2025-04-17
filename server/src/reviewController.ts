@@ -57,7 +57,7 @@ ReviewController.get('/:id', verifyReviewAccess, async (req, res) => {
   } catch (err) {
     res.status(500).send("Failed to fetch review");
   }
-  res.json(review);
+  res.json(review); //TODO
 });
 
 // POST /create - post a new review
@@ -98,16 +98,16 @@ ReviewController.post('/create', async (req, res) => {
     time: new Date()
   });
   await review.save();
-
   //TODO: add to vendor account
-  
+
   //just to make sure 
   const returnReview = await Review.findById(review._id)
   .populate('user', 'name')   //returning only user and vendor name, may change
   .populate('vendor', 'name');
 
+  //TODO status
   res.status(201).json(returnReview);
 });
 
-//TODO: additional fucntionality: update and delete reviews
+//TODO: additional functionality: update and delete reviews
 export default ReviewController;

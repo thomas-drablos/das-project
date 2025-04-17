@@ -9,6 +9,13 @@ const VendorController: Router = Router({ mergeParams: true });
 // GET / - list all visible vendors
 VendorController.get('/', async (req, res) => {
   const vendors = await Vendor.find({ hidden: false });
+  /*res.json({
+    name: vendor.name,
+    photos: vendor.photos,
+    description: vendor.description,
+    tags: vendor.tags,
+    reviews: vendor.reviews
+  });*/ //TODO
   res.json(vendors);
 });
 
@@ -23,6 +30,13 @@ VendorController.get('/all', requireAuth, async (req, res) => {
     return;
   }
   const vendors = await Vendor.find();
+  /*res.json({
+    name: vendor.name,
+    photos: vendor.photos,
+    description: vendor.description,
+    tags: vendor.tags,
+    reviews: vendor.reviews
+  });*/ //TODO
   res.json(vendors);
 });
 
@@ -55,7 +69,7 @@ VendorController.get('/:id', async (req, res) => { //TODO: check for valid id
 
 // POST /create - create a new vendor
 VendorController.post('/create', requireAuth, async (req, res) => {
-  //make sure they have an account (prob overkill but whatever)
+  //make sure they have an account
   const auth0Id = req.auth?.payload.sub;
   const userObj = await User.findOne({ auth0Id });
   if(!userObj){
@@ -81,7 +95,11 @@ VendorController.post('/create', requireAuth, async (req, res) => {
   await vendor.save();
 
   const returnVendor = await Vendor.findById(vendor._id);
-  res.status(201).json(returnVendor);
+  if(!returnVendor){
+    res.status(500).send("Failed to create vendor");
+    return;
+  }
+  res.status(200).send("Successfully created vendor");
 });
 
 //GET /:id/reviews - get all reviews for a vendor
@@ -116,11 +134,12 @@ VendorController.patch('/:id/name', requireAuth, async (req, res) => {
     res.status(403).send("Forbidden");
     return;
   }
+  
   const id = req.params;
   const name = req.body;
   if (typeof name !== 'string') {
     res.status(400).send("Name must be a string.");
-  }
+  }  
   const updatedVendor = await Vendor.findByIdAndUpdate(
     id,
     { name },
@@ -131,7 +150,7 @@ VendorController.patch('/:id/name', requireAuth, async (req, res) => {
     res.status(404).send("Vendor not found.");
     return;
   }
-  res.status(200).send("Successfully updated name."); //no need to return anything here
+  res.status(200).send("Successfully updated name.");
 })
 
 // TODO: for photos, create separate add and deletes by index
@@ -182,7 +201,7 @@ VendorController.patch('/:id/description', requireAuth, async (req, res) => {
 
 //TODO: tags array
 VendorController.patch('/:id/tags/add', requireAuth, async(req, res) => {
-  //
+  //input: index?
   res.status(200).send("Successfully added tag.");
 })
 VendorController.patch('/:id/tags/delete', requireAuth, async(req, res) => {
@@ -191,13 +210,7 @@ VendorController.patch('/:id/tags/delete', requireAuth, async(req, res) => {
 })
 
 // PATCH /:id/hide - toggle hidden status
-VendorController.patch('/:id/hide', requireAuth, async (req, res) => {
-  const auth0Id = req.auth?.payload.sub;
-  const userObj = await User.findOne({ auth0Id });
-  if(!userObj || !userObj.isAdmin){
-    res.status(403).send("Forbidden");
-    return;
-  }
+VendorController.patch('/:id/hide', async (req, res) => {
   const vendor = await Vendor.findById(req.params.id);
   if (!vendor){ 
     res.status(404).send('Vendor not found');
@@ -206,10 +219,8 @@ VendorController.patch('/:id/hide', requireAuth, async (req, res) => {
 
   vendor.hidden = !vendor.hidden;
   await vendor.save();
-  res.json({ id: vendor._id, hidden: vendor.hidden });
+  res.status(200).send("Successfully toggled vendor's hidden status");
 });
-
 //TODO: try/catches everywhere, add more functionality as we progress
-//DELETE /:id - delete a vendor  (should we have this?)
 
 export default VendorController;

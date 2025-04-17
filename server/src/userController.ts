@@ -55,6 +55,7 @@ UserController.post('/name', async (req: Request, res: Response) => {
     // Update database
     await User.updateOne({userId: req.userInfo.id}, {name: newName});
     res.send();
+    //TODO status message
 });
 
 export default UserController;

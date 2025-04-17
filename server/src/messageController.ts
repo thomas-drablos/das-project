@@ -3,6 +3,7 @@ import { requireAuth } from './auth';
 import Message from './models/message';
 import Chat from './models/chat';
 import User from './models/user';
+import Vendor from './models/vendor';
 
 import { IMessage } from './models/message';
 

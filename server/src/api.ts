@@ -4,7 +4,6 @@ import User from './models/user';
 import Chat from './models/chat';
 import Invoice from './models/invoice';
 import Login from './models/login';
-import Message from './models/message';
 import Review from './models/review';
 import Vendor from './models/vendor';
 
