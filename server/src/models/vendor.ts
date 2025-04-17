@@ -8,7 +8,7 @@ export interface IVendor extends Document {
   photos: string[]; // URLs to images
   description: string;
   tags: string[];
-  reviews: IReview[];
+  reviews: any[]; // can replace this with a Review ref interface later
   hidden: boolean;
 }
 

@@ -20,5 +20,7 @@ export const messageSchema = new Schema<IMessage>(
   { timestamps: true }
 );
 
-const Message = model<IMessage>('Message', messageSchema);
-export default Message;
+// Removed as redundant and used in chat.ts
+// const Message = model<IMessage>('Message', messageSchema);
+// module.exports = Message;
+// export default Message;

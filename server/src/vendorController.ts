@@ -6,6 +6,8 @@ import Review from './models/review';
 
 const VendorController: Router = Router({ mergeParams: true });
 
+VendorController.use(requireAuth);
+
 // GET / - list all visible vendors
 VendorController.get('/', async (req, res) => {
   const vendors = await Vendor.find({ hidden: false });
@@ -20,7 +22,7 @@ VendorController.get('/', async (req, res) => {
 });
 
 // GET /all - list all vendors (admin)
-VendorController.get('/all', requireAuth, async (req, res) => {
+VendorController.get('/all', async (req, res) => {
   const auth0Id = req.auth?.payload.sub;
   //find user object
   const userObj = await User.findOne({ auth0Id });
@@ -41,7 +43,7 @@ VendorController.get('/all', requireAuth, async (req, res) => {
 });
 
 // GET /:id - get a vendor by ID
-VendorController.get('/:id', async (req, res) => { //TODO: check for valid id
+VendorController.get('/:id', async (req, res) => {
   const vendor = await Vendor.findById(req.params.id);
   const auth0Id = req.auth?.payload.sub;
 
@@ -95,11 +97,7 @@ VendorController.post('/create', requireAuth, async (req, res) => {
   await vendor.save();
 
   const returnVendor = await Vendor.findById(vendor._id);
-  if(!returnVendor){
-    res.status(500).send("Failed to create vendor");
-    return;
-  }
-  res.status(200).send("Successfully created vendor");
+  res.status(201).json(returnVendor);
 });
 
 //GET /:id/reviews - get all reviews for a vendor
@@ -141,8 +139,8 @@ VendorController.patch('/:id/name', requireAuth, async (req, res) => {
     res.status(400).send("Name must be a string.");
   }  
   const updatedVendor = await Vendor.findByIdAndUpdate(
-    id,
-    { name },
+    req.params.id,
+    { $set: req.body },
     { new: true, runValidators: true }
   );
 

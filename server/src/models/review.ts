@@ -27,4 +27,5 @@ export const reviewSchema = new Schema<IReview>(
 );
 
 const Review = model<IReview>('Review', reviewSchema);
+module.exports = Review;
 export default Review;
