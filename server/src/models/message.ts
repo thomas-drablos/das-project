@@ -21,6 +21,5 @@ export const messageSchema = new Schema<IMessage>(
 );
 
 // Removed as redundant and used in chat.ts
-// const Message = model<IMessage>('Message', messageSchema);
-// module.exports = Message;
-// export default Message;
+const Message = model<IMessage>('Message', messageSchema);
+export default Message;
