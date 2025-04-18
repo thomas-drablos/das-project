@@ -17,5 +17,4 @@ export const userSchema = new Schema<IUser>({
     auth0Id: { type: String, required: true, unique: true },
 });
 const User = model<IUser>('User', userSchema);
-module.exports = User;
 export default User;

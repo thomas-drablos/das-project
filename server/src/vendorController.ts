@@ -10,14 +10,10 @@ VendorController.use(requireAuth);
 
 // GET / - list all visible vendors
 VendorController.get('/', async (req, res) => {
-  const vendors = await Vendor.find({ hidden: false });
-  /*res.json({
-    name: vendor.name,
-    photos: vendor.photos,
-    description: vendor.description,
-    tags: vendor.tags,
-    reviews: vendor.reviews
-  });*/ //TODO
+  const vendors = await Vendor.find({ hidden: false })
+  .populate({ path: 'user', select: '-_id name'})
+  .select('user.name name photos description tags reviews hidden');
+ 
   res.json(vendors);
 });
 
@@ -31,14 +27,9 @@ VendorController.get('/all', async (req, res) => {
     res.status(403).send("Forbidden");
     return;
   }
-  const vendors = await Vendor.find();
-  /*res.json({
-    name: vendor.name,
-    photos: vendor.photos,
-    description: vendor.description,
-    tags: vendor.tags,
-    reviews: vendor.reviews
-  });*/ //TODO
+  const vendors = await Vendor.find()
+  .populate({ path: 'user', select: '-_id name'})
+  .select('user name photos description tags reviews hidden');
   res.json(vendors);
 });
 
@@ -70,6 +61,7 @@ VendorController.get('/:id', async (req, res) => {
 });
 
 // POST /create - create a new vendor
+//TODO: restrict to only one per user
 VendorController.post('/create', requireAuth, async (req, res) => {
   //make sure they have an account
   const auth0Id = req.auth?.payload.sub;
