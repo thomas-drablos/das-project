@@ -30,3 +30,6 @@ env
 
 # Node crap
 .nvmrc
+
+#Environment variables
+.env

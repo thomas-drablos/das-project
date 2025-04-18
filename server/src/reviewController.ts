@@ -53,7 +53,7 @@ ReviewController.get('/', async (req, res) => {
 // GET /:id - get a single review by id
 ReviewController.get('/:id', verifyReviewAccess, async (req, res) => {
   try {
-    const review = req.review; //TODO: type error
+    //const review = req.review; //TODO: type error
   } catch (err) {
     res.status(500).send("Failed to fetch review");
   }

@@ -2,7 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { requireAuth } from './auth';
 import Vendor from './models/vendor';
 import User from './models/user';
-import Review from './models/review';
+import Review, { reviewSchema } from './models/review';
 
 const VendorController: Router = Router({ mergeParams: true });
 
@@ -91,7 +91,7 @@ VendorController.post('/create', requireAuth, async (req, res) => {
     photos: photos || [],
     description: description || '',
     tags: tags || [],
-    reviews: [],
+    reviews: [reviewSchema],
     hidden: false,
   });
   await vendor.save();

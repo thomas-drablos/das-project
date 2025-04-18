@@ -8,7 +8,7 @@ export interface IVendor extends Document {
   photos: string[]; // URLs to images
   description: string;
   tags: string[];
-  reviews: any[]; // can replace this with a Review ref interface later
+  reviews: IReview[]; // can replace this with a Review ref interface later
   hidden: boolean;
 }
 
@@ -19,7 +19,7 @@ const vendorSchema = new Schema<IVendor>(
     photos: { type: [String], default: [] },
     description: { type: String },
     tags: { type: [String], default: [] },
-    reviews: [reviewSchema],
+    reviews: { type: [reviewSchema], default: [] },
     hidden: { type: Boolean, default: false }
   },
   { timestamps: true }

@@ -3,6 +3,7 @@ import { requireAuth } from './auth';
 import Message from './models/message';
 import Chat from './models/chat';
 import User from './models/user';
+import Vendor from './models/vendor';
 
 import { IMessage } from './models/message';
 
@@ -29,13 +30,17 @@ const verifyMessageAccess = async (req: Request, res: Response, next: NextFuncti
     populate: { path: 'user' } // get vendor.user.auth0Id
   });
 
-  if (!message) return res.status(404).send('Message not found');
+  if (!message) {
+    res.status(404).send('Message not found');
+    return;
+  }
 
   const userAuth0Id = message.user?.auth0Id;
   const vendorOwnerAuth0Id = (message.vendor as any)?.user?.auth0Id;
 
   if (userAuth0Id !== auth0Id && vendorOwnerAuth0Id !== auth0Id) {
-    return res.status(403).send('Forbidden');
+    res.status(403).send('Forbidden');
+    return;
   }
 
 
@@ -51,7 +56,10 @@ MessageController.get('/', async (req, res) => {
 
   // Lookup user document (we'll use its `_id`)
   const user = await User.findOne({ auth0Id });
-  if (!user) return res.status(404).send("User not found");
+  if (!user){
+    res.status(404).send("User not found");
+    return; 
+  }
 
   // Also lookup vendor(s) owned by this user
   const ownedVendors = await Vendor.find({ user: user._id }).select('_id');
@@ -101,14 +109,21 @@ MessageController.post('/create', async (req, res) => {
   const { vendor, chat, text } = req.body;
 
   if (!vendor || !chat || !text) {
-    return res.status(400).send('Missing required fields: vendor, chat, text');
+    res.status(400).send('Missing required fields: vendor, chat, text');
+    return;
   }
 
   const userObj = await User.findOne({ auth0Id });
-  if (!userObj) return res.status(404).send('User not found');
+  if (!userObj){
+    res.status(404).send('User not found');
+    return;
+  }
 
   const chatObj = await Chat.findById(chat);
-  if (!chatObj) return res.status(404).send('Chat not found');
+  if (!chatObj){
+    res.status(404).send('Chat not found'); 
+    return; 
+  }
 
   const message = await Message.create({
     user: {
