@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import dotenv from 'dotenv';
 import session from 'express-session';
 import bodyParser from 'body-parser';
@@ -33,6 +34,12 @@ mongoose.connect(process.env.DB_CONN_STRING || '');
 
 // Configure application
 const app = express();
+
+// Set CORS policy: only allow app origin
+app.use(cors({
+    origin: process.env.CORS_ALLOWED_ORIGIN,
+    allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 
 app.use(bodyParser.json());
 
