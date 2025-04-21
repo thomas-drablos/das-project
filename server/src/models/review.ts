@@ -8,6 +8,7 @@ export interface IReview extends Document {
   text: string;
   rating: number;
   time: Date;
+  hidden: boolean;
 }
 
 export const reviewSchema = new Schema<IReview>(
@@ -22,6 +23,7 @@ export const reviewSchema = new Schema<IReview>(
       max: 5,
     },
     time: { type: Date, default: Date.now },
+    hidden: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
