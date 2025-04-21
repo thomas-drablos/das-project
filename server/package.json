@@ -14,12 +14,14 @@
   "description": "",
   "dependencies": {
     "body-parser": "^2.2.0",
+    "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "express-oauth2-jwt-bearer": "^1.6.1",
     "express-session": "^1.18.1"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.17",
     "@types/express": "^5.0.1",
     "@types/express-session": "^1.18.1",
     "@types/node": "^22.13.14",

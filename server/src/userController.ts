@@ -20,7 +20,7 @@ const enforceSameUser = async (req: Request, res: Response, next: NextFunction) 
         name: user.name,
         email: user.email,
         isAdmin: user.isAdmin,
-        vendorId: user.vendorId,
+        vendorId: user.vendorId
     };
     next();
 }
@@ -43,12 +43,12 @@ UserController.post('/name', async (req: Request, res: Response) => {
         return;
     }
 
-    const newName = req.query.name as string|undefined;
+    const newName = req.body.name as string|undefined;
     if (newName === undefined) {
         res.status(400).send('Must specify name in query parameter');
         return;
     }
-    if (newName.length >= 8) {
+    if (newName.length < 8) {
         res.status(400).send('Name must be at least 8 characters long');
         return;
     }

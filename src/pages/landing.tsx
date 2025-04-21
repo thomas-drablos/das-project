@@ -1,6 +1,7 @@
 // src/pages/LandingPage.tsx
 import React from "react";
 import SearchBar from "../components/Searchbar"; // Import SearchBar
+import AllVendors from '../components/AllVendors'
 
 const LandingPage: React.FC = () => {
   return (
@@ -24,6 +25,7 @@ const LandingPage: React.FC = () => {
         }}
       />
       <SearchBar />
+      <AllVendors/>
     </div>
   );
 };

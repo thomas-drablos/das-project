@@ -1,16 +1,42 @@
 // src/pages/User.tsx
 import React from "react";
-import { useAuth0 } from "@auth0/auth0-react";
+import { useAppUser } from "../contexts/appUserContext";
+import { useApiToken } from "../contexts/apiTokenContext";
+import { useState, useEffect } from "react";
+import { getJson, postJson } from "../util";
+import { useNavigate } from "react-router-dom";
 
 const User: React.FC = () => {
-  const { user, isAuthenticated, isLoading } = useAuth0();
+  const { loading, userId, name } = useAppUser()
+  const { apiToken } = useApiToken()
+  const navigate = useNavigate()
 
-  if (isLoading) {
+  const [userInfo, setUserInfo] = useState<any>()
+  const [editName, setEditName] = useState<boolean>(false)
+  const [newName, setNewName] = useState<string>(name || '')
+
+  useEffect(() => {
+    getJson(`api/user/${userId}`, apiToken).then(setUserInfo)
+  }, [loading, name])
+
+  if (loading) {
     return <div>Loading ...</div>;
+  }
+  
+  // if there is a vendor page --> go to page
+  // no vendor page --> make one --> go to page
+  const handleVendor = async () => {
+    if (typeof(userInfo) == 'object' && userInfo.vendorId == null) {
+      await postJson(`http://localhost:8000/api/vendor/create`, {name: userInfo.name}, apiToken)
+      window.location.reload()
+    }
+    else if (typeof(userInfo) == 'object') {
+      navigate(`/vendor/${userInfo.vendorId}`)
+    }
   }
 
   return (
-    isAuthenticated && (
+    typeof(userInfo) == 'object' && (
       <div
         style={{
           display: "flex",
@@ -19,20 +45,29 @@ const User: React.FC = () => {
           padding: "20px",
         }}
       >
-        <img
-          src={user?.picture}
-          alt={user?.name || "User Profile"}
-          style={{
-            borderRadius: "50%",
-            width: "150px",
-            height: "150px",
-            objectFit: "cover",
-            marginBottom: "20px",
-          }}
-        />
-        <h2>{user?.nickname}</h2>
-        <p>Email: {user?.email}</p>
-        <p>Nickname: {user?.nickname}</p> {/* Display nickname below email */}
+        <div onClick={() => {setEditName(true); setNewName(userInfo.name)}}>
+          {editName ? (
+            <>
+              <input
+              type="text"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              onBlur={() => {
+                const response = postJson(`http://localhost:8000/api/user/${userId}/name`, {name: newName}, apiToken)
+                response.then((result) => console.log('try to change name:', result))
+                setUserInfo({...userInfo, name: newName})
+                setEditName(false)
+              }}
+              autoFocus
+              />
+            </>
+          ) : (<h2>{userInfo.name}</h2>)}
+        
+        </div>
+        <p>Email: {userInfo.email}</p>
+
+        <br/>
+        <button onClick={handleVendor}>Vendor Page</button>
       </div>
     )
   );
