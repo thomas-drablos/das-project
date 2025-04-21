@@ -39,25 +39,28 @@ UserController.get('/', (req: Request, res: Response) => {
 });
 
 UserController.post('/name', async (req: Request, res: Response) => {
-    if (!req.userInfo) {
-        res.status(500).json();
-        return;
-    }
+    try {
+        if (!req.userInfo) {
+            res.status(500).json();
+            return;
+        }
 
-    const newName = req.query.name as string|undefined;
-    if (newName === undefined) {
-        res.status(400).json('Must specify name in query parameter');
-        return;
-    }
-    if (newName.length >= 8) {
-        res.status(400).json('Name must be at least 8 characters long');
-        return;
-    }
+        const newName = req.query.name as string|undefined;
+        if (newName === undefined) {
+            res.status(400).json('Must specify name in query parameter');
+            return;
+        }
+        if (newName.length >= 5) {
+            res.status(400).json('Name must be at least 5 characters long');
+            return;
+        }
 
-    // Update database
-    await User.updateOne({userId: req.userInfo.id}, {name: newName});
-    res.json();
-    //TODO status message
+        // Update database
+        await User.updateOne({userId: req.userInfo.id}, {name: newName});
+        res.status(200).json('Successfully updated user name');
+    } catch (err){
+        res.status(500).json('Failed to update user name');
+    }
 });
 //TODO more functionalities as needed
 

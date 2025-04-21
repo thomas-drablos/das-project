@@ -118,5 +118,18 @@ ReviewController.post('/create', async (req, res) => {
   res.status(201).json("Review successfully created.");
 });
 
+// PATCH /:id/hide - toggle hidden status
+ReviewController.patch('/:id/hide', async (req, res) => {
+  const review = await Review.findById(req.params.id);
+  if (!review){ 
+    res.status(404).json('Review not found');
+    return;
+  }
+
+  review.hidden = !review.hidden;
+  await review.save();
+  res.status(200).json("Successfully toggled vendor's hidden status");
+});
+
 //TODO: additional functionality: update and delete reviews
 export default ReviewController;
