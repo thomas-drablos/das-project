@@ -20,6 +20,7 @@ const enforceSameUser = async (req: Request, res: Response, next: NextFunction) 
         name: user.name,
         email: user.email,
         isAdmin: user.isAdmin,
+        vendorId: user.vendorId,
     };
     next();
 }
@@ -57,5 +58,6 @@ UserController.post('/name', async (req: Request, res: Response) => {
     res.send();
     //TODO status message
 });
+//TODO more functionalities as needed
 
 export default UserController;

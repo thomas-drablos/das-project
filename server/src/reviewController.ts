@@ -61,7 +61,7 @@ ReviewController.get('/:id', verifyReviewAccess, async (req, res) => {
 
 // POST /create - post a new review
 //assumption: passing vendor id in body
-ReviewController.post('/create', verifyReviewAccess, async (req, res) => {
+ReviewController.post('/create', async (req, res) => {
   const auth0Id = req.auth?.payload.sub;
   const { vendor, text, rating } = req.body;
 
