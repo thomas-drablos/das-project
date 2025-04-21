@@ -53,7 +53,7 @@ InvoiceController.get('/:id', verifyInvoiceAccess, async (req, res) => {
 InvoiceController.post('/create', async (req, res) => {
   const { user, vendor, price, specs } = req.body;
 
-  if (!user || !vendor || price == null || !specs) {
+  if (!user || !vendor || !price || !specs) {
     return res.status(400).send('Missing required fields');
   }
 
