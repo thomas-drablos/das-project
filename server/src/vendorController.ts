@@ -6,8 +6,6 @@ import Review, { reviewSchema } from './models/review';
 
 const VendorController: Router = Router({ mergeParams: true });
 
-VendorController.use(requireAuth);
-
 // GET / - list all visible vendors
 VendorController.get('/', async (req, res) => {
   const vendors = await Vendor.find({ hidden: false })
@@ -24,17 +22,17 @@ VendorController.get('/all', async (req, res) => {
   const userObj = await User.findOne({ auth0Id });
 
   if(!userObj || !userObj.isAdmin){
-    res.status(403).send("Forbidden");
+    res.status(403).json("Forbidden");
     return;
   }
   const vendors = await Vendor.find()
-  .populate({ path: 'user', select: '-_id name'})
+  .populate({ path: 'user', select: '-_id name'}) //ensures db id is secure
   .select('user name photos description tags reviews hidden');
   res.json(vendors);
 });
 
-// GET /:id - get a vendor by ID
-VendorController.get('/:id', async (req, res) => {
+// GET /:id - get a vendor by ID 
+VendorController.get('/:id', async (req, res) => { 
   const vendor = await Vendor.findById(req.params.id);
   const auth0Id = req.auth?.payload.sub;
 
@@ -48,7 +46,7 @@ VendorController.get('/:id', async (req, res) => {
   }
 
   if (!vendor || (vendor.hidden && !isAdmin)){ 
-    res.status(404).send('Vendor not found.');
+    res.status(404).json('Vendor not found.');
     return;
   } 
   res.json({
@@ -60,6 +58,8 @@ VendorController.get('/:id', async (req, res) => {
   });
 });
 
+VendorController.use(requireAuth);
+
 // POST /create - create a new vendor
 //TODO: restrict to only one per user
 VendorController.post('/create', requireAuth, async (req, res) => {
@@ -67,13 +67,13 @@ VendorController.post('/create', requireAuth, async (req, res) => {
   const auth0Id = req.auth?.payload.sub;
   const userObj = await User.findOne({ auth0Id });
   if(!userObj){
-    res.status(401).send("Must be logged in to open a storefront.");
+    res.status(401).json("Must be logged in to open a storefront.");
     return;
   }
   const { name, photos, description, tags } = req.body;
 
   if (!name) {
-    res.status(400).send('Name is required.');
+    res.status(400).json('Name is required.');
     return;
   }
 
@@ -96,7 +96,7 @@ VendorController.post('/create', requireAuth, async (req, res) => {
 VendorController.patch('/:id/reviews', async (req, res) => {
   const vendor = await Vendor.findById(req.params.id);
   if (!vendor){
-    res.status(404).send("Vendor not found.");
+    res.status(404).json("Vendor not found.");
     return;
   }
   const reviews = await Review.find({ vendor: vendor._id })
@@ -121,14 +121,14 @@ VendorController.patch('/:id/name', requireAuth, async (req, res) => {
 
   //confirm user is either admin or the vendor themselves
   if(!userObj || (!userObj.isAdmin && vendorUserId !== requestingUserId)){ //allowing admin to change name as well
-    res.status(403).send("Forbidden");
+    res.status(403).json("Forbidden");
     return;
   }
   
   const id = req.params;
   const name = req.body;
   if (typeof name !== 'string') {
-    res.status(400).send("Name must be a string.");
+    res.status(400).json("Name must be a string.");
   }  
   const updatedVendor = await Vendor.findByIdAndUpdate(
     req.params.id,
@@ -137,20 +137,20 @@ VendorController.patch('/:id/name', requireAuth, async (req, res) => {
   );
 
   if(!updatedVendor){
-    res.status(404).send("Vendor not found.");
+    res.status(404).json("Vendor not found.");
     return;
   }
-  res.status(200).send("Successfully updated name.");
+  res.status(200).json("Successfully updated name.");
 })
 
 // TODO: for photos, create separate add and deletes by index
 VendorController.patch('/:id/photos/add', requireAuth, async (req, res) => {
   // coming soon i promise
-  res.status(200).send("Successfully added image");
+  res.status(200).json("Successfully added image");
 })
 VendorController.patch('/:id/photos/delete', requireAuth, async (req, res) => {
   // 
-  res.status(200).send("Successfully deleted image");
+  res.status(200).json("Successfully deleted image");
 })
 
 // PATCH /:id/description - update vendor description
@@ -168,13 +168,13 @@ VendorController.patch('/:id/description', requireAuth, async (req, res) => {
 
   //confirm user is either admin or the vendor themselves
   if(!userObj || (!userObj.isAdmin && vendorUserId !== requestingUserId)){ //allowing admin to change name as well
-    res.status(403).send("Forbidden");
+    res.status(403).json("Forbidden");
     return;
   }
   const id = req.params;
   const description = req.body;
   if (typeof description !== 'string') {
-    res.status(400).send("Description must be a string.");
+    res.status(400).json("Description must be a string.");
   }
   const updatedVendor = await Vendor.findByIdAndUpdate(
     id,
@@ -183,33 +183,33 @@ VendorController.patch('/:id/description', requireAuth, async (req, res) => {
   );
 
   if(!updatedVendor){
-    res.status(404).send("Vendor not found.");
+    res.status(404).json("Vendor not found.");
     return;
   }
-  res.status(200).send("Successfully updated description."); //success, no other returns
+  res.status(200).json("Successfully updated description."); //success, no other returns
 })
 
 //TODO: tags array
 VendorController.patch('/:id/tags/add', requireAuth, async(req, res) => {
   //input: index?
-  res.status(200).send("Successfully added tag.");
+  res.status(200).json("Successfully added tag.");
 })
 VendorController.patch('/:id/tags/delete', requireAuth, async(req, res) => {
   //
-  res.status(200).send("Successfully deleted tag.");
+  res.status(200).json("Successfully deleted tag.");
 })
 
 // PATCH /:id/hide - toggle hidden status
 VendorController.patch('/:id/hide', async (req, res) => {
   const vendor = await Vendor.findById(req.params.id);
   if (!vendor){ 
-    res.status(404).send('Vendor not found');
+    res.status(404).json('Vendor not found');
     return;
   }
 
   vendor.hidden = !vendor.hidden;
   await vendor.save();
-  res.status(200).send("Successfully toggled vendor's hidden status");
+  res.status(200).json("Successfully toggled vendor's hidden status");
 });
 //TODO: try/catches everywhere, add more functionality as we progress
 

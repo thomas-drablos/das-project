@@ -4,4 +4,5 @@ export interface UserDetails {
     email: string,
     isAdmin: boolean,
     vendorId: string,
+    profilePic: string;
 }

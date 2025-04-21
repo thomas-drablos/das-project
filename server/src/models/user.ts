@@ -8,6 +8,7 @@ export interface IUser {
     userId: string;
     auth0Id: string;
     vendorId: string;
+    profilePic: string;
 }
 
 export const userSchema = new Schema<IUser>({
@@ -17,6 +18,7 @@ export const userSchema = new Schema<IUser>({
     userId: { type: String, required: true, unique: true },
     auth0Id: { type: String, required: true, unique: true },
     vendorId: { type: String, required: true, unique: true },
+    profilePic: { type: String, required: false, unique: false },
 });
 const User = model<IUser>('User', userSchema);
 export default User;

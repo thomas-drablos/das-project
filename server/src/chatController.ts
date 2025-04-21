@@ -29,13 +29,13 @@ const verifyChatAccess = async (req: Request, res: Response, next: NextFunction)
     .populate('vendor', 'name');
 
   if (!chat) {
-    res.status(404).send('Chat not found');
+    res.status(404).json('Chat not found');
     return;
   }
 
   if (chat.user.auth0Id !== auth0Id && chat.vendor.user.auth0Id !== auth0Id)
     {
-      res.status(403).send('Forbidden');
+      res.status(403).json('Forbidden');
       return;
   }
 
@@ -81,7 +81,7 @@ ChatController.post('/create', async (req, res) => {
   const { vendor } = req.body;
 
   if (!vendor) {
-    res.status(400).send('Missing vendor');
+    res.status(400).json('Missing vendor');
     return;
   }
 
@@ -89,13 +89,13 @@ ChatController.post('/create', async (req, res) => {
   const userObj = await User.findOne({ auth0Id });
 
   if (!userObj) {
-    res.status(404).send('Authenticated user not found');
+    res.status(404).json('Authenticated user not found');
     return;
   }
 
   const vendorObj = await Vendor.findById(vendor.id);
   if (!vendorObj) {
-    res.status(404).send('Vendor not found');
+    res.status(404).json('Vendor not found');
     return; 
   }
 
@@ -128,7 +128,7 @@ ChatController.post('/create', async (req, res) => {
 ChatController.get('/:id/messages', verifyChatAccess, async (req, res) => {
   const chat = req.chat;
   if (!chat) {
-    res.status(500).send('Chat not found');
+    res.status(500).json('Chat not found');
     return; 
   }
   res.json(chat.messages.sort((a, b) => +new Date(a.time) - +new Date(b.time)));
@@ -139,7 +139,7 @@ ChatController.post('/:id/messages', verifyChatAccess, async (req, res) => {
   const { text } = req.body;
 
   if (!text) {
-    res.status(400).send('Missing message text');
+    res.status(400).json('Missing message text');
     return;
   }
 
@@ -160,7 +160,7 @@ ChatController.post('/:id/messages', verifyChatAccess, async (req, res) => {
   };
   
   if (!chat) {
-    res.status(500).send('Chat not found');
+    res.status(500).json('Chat not found');
     return;
   }
   chat.messages.push(newMessage);

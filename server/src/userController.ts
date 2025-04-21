@@ -21,6 +21,7 @@ const enforceSameUser = async (req: Request, res: Response, next: NextFunction) 
         email: user.email,
         isAdmin: user.isAdmin,
         vendorId: user.vendorId,
+        profilePic: user.profilePic,
     };
     next();
 }
@@ -30,7 +31,7 @@ UserController.use(enforceSameUser);
 
 UserController.get('/', (req: Request, res: Response) => {
     if (!req.userInfo) {
-        res.status(500).send();
+        res.status(500).json();
         return;
     }
 
@@ -39,23 +40,23 @@ UserController.get('/', (req: Request, res: Response) => {
 
 UserController.post('/name', async (req: Request, res: Response) => {
     if (!req.userInfo) {
-        res.status(500).send();
+        res.status(500).json();
         return;
     }
 
     const newName = req.query.name as string|undefined;
     if (newName === undefined) {
-        res.status(400).send('Must specify name in query parameter');
+        res.status(400).json('Must specify name in query parameter');
         return;
     }
     if (newName.length >= 8) {
-        res.status(400).send('Name must be at least 8 characters long');
+        res.status(400).json('Name must be at least 8 characters long');
         return;
     }
 
     // Update database
     await User.updateOne({userId: req.userInfo.id}, {name: newName});
-    res.send();
+    res.json();
     //TODO status message
 });
 //TODO more functionalities as needed
