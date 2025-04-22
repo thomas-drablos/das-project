@@ -20,7 +20,8 @@ const enforceSameUser = async (req: Request, res: Response, next: NextFunction) 
         name: user.name,
         email: user.email,
         isAdmin: user.isAdmin,
-        vendorId: user.vendorId
+        vendorId: user.vendorId,
+        profilePic: user.profilePic,
     };
     next();
 }
@@ -30,7 +31,7 @@ UserController.use(enforceSameUser);
 
 UserController.get('/', (req: Request, res: Response) => {
     if (!req.userInfo) {
-        res.status(500).send();
+        res.status(500).json();
         return;
     }
 
@@ -38,26 +39,30 @@ UserController.get('/', (req: Request, res: Response) => {
 });
 
 UserController.post('/name', async (req: Request, res: Response) => {
-    if (!req.userInfo) {
-        res.status(500).send();
-        return;
-    }
+    try {
+        if (!req.userInfo) {
+            res.status(500).json();
+            return;
+        }
 
     const newName = req.body.name as string|undefined;
     if (newName === undefined) {
-        res.status(400).send('Must specify name in query parameter');
+        res.status(400).json('Must specify name in query parameter');
         return;
     }
-    if (newName.length < 8) {
-        res.status(400).send('Name must be at least 8 characters long');
+    if (newName.length < 5) {
+        res.status(400).json('Name must be at least 8 characters long');
         return;
     }
 
-    // Update database
-    await User.updateOne({userId: req.userInfo.id}, {name: newName});
-    res.send();
-    //TODO status message
+        // Update database
+        await User.updateOne({userId: req.userInfo.id}, {name: newName});
+        res.status(200).json('Successfully created name');
+    } catch (err){
+        res.status(500).json('Failed to create user name');
+    }
 });
+//PATCH name
 //TODO more functionalities as needed
 
 export default UserController;

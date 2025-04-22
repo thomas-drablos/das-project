@@ -14,25 +14,10 @@ VendorController.get('/', async (req, res) => {
   res.json(vendors);
 });
 
-// GET /:id - get a vendor by ID
-VendorController.get('/:id', async (req, res) => {
+// GET /:id - get a vendor by ID 
+VendorController.get('/:id', async (req, res) => { 
   const vendor = await Vendor.findById(req.params.id);
-  // below requires user to be logged in to view vendor page
-  /*const auth0Id = req.auth?.payload.sub;
 
-  //find user
-  const userObj = await User.findOne({ auth0Id });
-  var isAdmin;
-  if(!userObj){ //not logged in, can still access but obv has no admin privileges
-    isAdmin = false;
-  } else {
-    isAdmin = userObj.isAdmin;
-  }
-
-  if (!vendor || (vendor.hidden && !isAdmin)){ 
-    res.status(404).send('Vendor not found.');
-    return;
-  } */
   if (vendor == null) return
   res.json({
     name: vendor.name,
@@ -107,13 +92,13 @@ VendorController.get('/results/:query', async (req, res) => {
 VendorController.use(requireAuth);
 
 // GET /all - list all vendors (admin)
-VendorController.get('/all', async (req, res) => {
+VendorController.get('/:id/all', async (req, res) => {
   const auth0Id = req.auth?.payload.sub;
   //find user object
   const userObj = await User.findOne({ auth0Id });
 
   if (!userObj || !userObj.isAdmin) {
-    res.status(403).send("Forbidden");
+    res.status(403).json("Forbidden");
     return;
   }
   const vendors = await Vendor.find()
@@ -129,17 +114,17 @@ VendorController.post('/create', requireAuth, async (req, res) => {
   const auth0Id = req.auth?.payload.sub;
   const userObj = await User.findOne({ auth0Id });
   if (!userObj) {
-    res.status(401).send("Must be logged in to open a storefront.");
+    res.status(401).json("Must be logged in to open a storefront.");
     return;
   }
   else if (userObj.vendorId != null) {
-    res.status(200).send("This user already has a vendor page")
+    res.status(200).json("This user already has a vendor page")
     return
   }
   const { name, photos, description, tags } = req.body;
 
   if (!name) {
-    res.status(400).send('Name is required.');
+    res.status(400).json('Name is required.');
     return;
   }
 
@@ -165,7 +150,7 @@ VendorController.post('/create', requireAuth, async (req, res) => {
 VendorController.patch('/:id/reviews', async (req, res) => {
   const vendor = await Vendor.findById(req.params.id);
   if (!vendor) {
-    res.status(404).send("Vendor not found.");
+    res.status(404).json("Vendor not found.");
     return;
   }
   const reviews = await Review.find({ vendor: vendor._id })
@@ -190,14 +175,14 @@ VendorController.patch('/:id/name', requireAuth, async (req, res) => {
 
   //confirm user is either admin or the vendor themselves
   if (userObj == null || (userObj.isAdmin = false && vendorUserId != requestingUserId)) { //allowing admin to change name as well
-    res.status(403).send("Forbidden");
+    res.status(403).json("Forbidden");
     return;
   }
 
   const id = req.params;
   const name = req.body.name;
   if (typeof name != 'string') {
-    res.status(400).send("Name must be a string.");
+    res.status(400).json("Name must be a string.");
   }
   const updatedVendor = await Vendor.findByIdAndUpdate(
     req.params.id,
@@ -206,20 +191,20 @@ VendorController.patch('/:id/name', requireAuth, async (req, res) => {
   );
 
   if (!updatedVendor) {
-    res.status(404).send("Vendor not found.");
+    res.status(404).json("Vendor not found.");
     return;
   }
-  res.status(200).send("Successfully updated name.");
+  res.status(200).json("Successfully updated name.");
 })
 
 // TODO: for photos, create separate add and deletes by index
 VendorController.patch('/:id/photos/add', requireAuth, async (req, res) => {
   // coming soon i promise
-  res.status(200).send("Successfully added image");
+  res.status(200).json("Successfully added image");
 })
 VendorController.patch('/:id/photos/delete', requireAuth, async (req, res) => {
   // 
-  res.status(200).send("Successfully deleted image");
+  res.status(200).json("Successfully deleted image");
 })
 
 // PATCH /:id/description - update vendor description
@@ -237,13 +222,13 @@ VendorController.patch('/:id/description', requireAuth, async (req, res) => {
 
   //confirm user is either admin or the vendor themselves
   if (userObj == null || (userObj.isAdmin = false && vendorUserId != requestingUserId)) { //allowing admin to change name as well
-    res.status(403).send("Forbidden");
+    res.status(403).json("Forbidden");
     return;
   }
   const id = req.params.id;
   const description = req.body.description;
   if (typeof description !== 'string') {
-    res.status(400).send("Description must be a string.");
+    res.status(400).json("Description must be a string.");
   }
   const updatedVendor = await Vendor.findByIdAndUpdate(
     id,
@@ -252,10 +237,10 @@ VendorController.patch('/:id/description', requireAuth, async (req, res) => {
   );
 
   if (!updatedVendor) {
-    res.status(404).send("Vendor not found.");
+    res.status(404).json("Vendor not found.");
     return;
   }
-  res.status(200).send("Successfully updated description."); //success, no other returns
+  res.status(200).json("Successfully updated description."); //success, no other returns
 })
 
 //TODO: tags array
@@ -274,14 +259,14 @@ VendorController.patch('/:id/tags/add', requireAuth, async (req, res) => {
 
   //confirm user is either admin or the vendor themselves
   if (userObj == null || (userObj.isAdmin = false && vendorUserId != requestingUserId)) { //allowing admin to change name as well
-    res.status(403).send("Forbidden");
+    res.status(403).json("Forbidden");
     return;
   }
 
   const tags = req.body.tags;
   tags.forEach((tag: any) => {
     if (typeof tag !== 'string') {
-      res.status(400).send("Tags must be a string.")
+      res.status(400).json("Tags must be a string.")
     }
   })
 
@@ -292,29 +277,29 @@ VendorController.patch('/:id/tags/add', requireAuth, async (req, res) => {
   );
 
   if (!updatedVendor) {
-    res.status(404).send("Vendor not found.");
+    res.status(404).json("Vendor not found.");
     return;
   }
-  res.status(200).send("Successfully added tag.");
+  res.status(200).json("Successfully added tag.");
 })
 
 
 VendorController.patch('/:id/tags/delete', requireAuth, async (req, res) => {
   //
-  res.status(200).send("Successfully deleted tag.");
+  res.status(200).json("Successfully deleted tag.");
 })
 
 // PATCH /:id/hide - toggle hidden status
 VendorController.patch('/:id/hide', async (req, res) => {
   const vendor = await Vendor.findById(req.params.id);
   if (!vendor) {
-    res.status(404).send('Vendor not found');
+    res.status(404).json('Vendor not found');
     return;
   }
 
   vendor.hidden = !vendor.hidden;
   await vendor.save();
-  res.status(200).send("Successfully toggled vendor's hidden status");
+  res.status(200).json("Successfully toggled vendor's hidden status");
 });
 //TODO: try/catches everywhere, add more functionality as we progress
 

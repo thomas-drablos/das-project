@@ -7,7 +7,8 @@ export interface IUser {
     isAdmin: boolean;
     userId: string;
     auth0Id: string;
-    vendorId: string | null
+    vendorId: string | null;
+    profilePic: string;
 }
 
 export const userSchema = new Schema<IUser>({
@@ -16,7 +17,8 @@ export const userSchema = new Schema<IUser>({
     isAdmin: { type: Boolean, required: true, default: false },
     userId: { type: String, required: true, unique: true },
     auth0Id: { type: String, required: true, unique: true },
-    vendorId: { type: String, required: false, default: null}
+    vendorId: { type: String, required: false, default: null},
+    profilePic: { type: String, required: false, unique: false },
 });
 const User = model<IUser>('User', userSchema);
 export default User;

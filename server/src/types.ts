@@ -3,5 +3,6 @@ export interface UserDetails {
     name: string,
     email: string,
     isAdmin: boolean,
-    vendorId: string | null
+    vendorId: string | null,
+    profilePic: string,
 }
