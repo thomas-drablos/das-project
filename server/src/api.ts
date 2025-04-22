@@ -36,7 +36,7 @@ router.post('/register', requireAuth, async (req: Request, res: Response) => {
     // Check provided user information against signed info from access token
     // We'll use the verified details from token as it's not untrusted user data
     // Only purpose for the user provided data is sanity check: prevents a client bug thinking the name is different
-    const verifiedName = req.auth?.payload.appName;
+    const verifiedName = req.auth?.payload.appUsername;
     const verifiedEmail = req.auth?.payload.appEmail;
     if (!verifiedName || name !== verifiedName ||
         !verifiedEmail || email !== verifiedEmail) {
@@ -56,8 +56,8 @@ router.post('/register', requireAuth, async (req: Request, res: Response) => {
         }
 
         const user = new User({
-            verifiedName,
-            verifiedEmail,
+            name: verifiedName,
+            email: verifiedEmail,
             auth0Id: sub,
             userId: uuid,
         });
