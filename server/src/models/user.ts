@@ -7,7 +7,7 @@ export interface IUser {
     isAdmin: boolean;
     userId: string;
     auth0Id: string;
-    vendorId: string | null
+    vendorId: string | null;
     profilePic: string;
 }
 

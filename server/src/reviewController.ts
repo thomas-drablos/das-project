@@ -82,19 +82,19 @@ ReviewController.post('/create', async (req, res) => {
     return;
   }
 
-  //find user object
-  const userObj = await User.findOne({ auth0Id });
-  if (!userObj) {
-    res.status(404).json("User not found.");
-    return;
-  }
+ //find user object
+ const userObj = await User.findOne({ auth0Id });
+ if(!userObj){
+   res.status(404).json("User not found.");
+   return;
+ }
 
-  //find vendor object
-  const vendorObj = await Vendor.findById(vendor);
-  if (!vendorObj) {
-    res.status(404).json("Vendor not found.");
-    return;
-  }
+ //find vendor object
+ const vendorObj = await Vendor.findById(vendor);
+ if(!vendorObj){
+   res.status(404).json("Vendor not found.");
+   return;
+ }
 
   //create new review
   const review = await Review.create({

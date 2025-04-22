@@ -4,5 +4,5 @@ export interface UserDetails {
     email: string,
     isAdmin: boolean,
     vendorId: string | null,
-    profilePic: string
+    profilePic: string,
 }

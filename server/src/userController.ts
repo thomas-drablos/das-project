@@ -56,12 +56,13 @@ UserController.post('/name', async (req: Request, res: Response) => {
         }
 
         // Update database
-        await User.updateOne({ userId: req.userInfo.id }, { name: newName });
-        res.status(200).json('Successfully updated user name');
-    } catch (err) {
-        res.status(500).json('Failed to update user name');
+        await User.updateOne({userId: req.userInfo.id}, {name: newName});
+        res.status(200).json('Successfully created name');
+    } catch (err){
+        res.status(500).json('Failed to create user name');
     }
 });
+//PATCH name
 //TODO more functionalities as needed
 
 export default UserController;
