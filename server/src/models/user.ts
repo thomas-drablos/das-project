@@ -17,7 +17,7 @@ export const userSchema = new Schema<IUser>({
     isAdmin: { type: Boolean, required: true, default: false },
     userId: { type: String, required: true, unique: true },
     auth0Id: { type: String, required: true, unique: true },
-    vendorId: { type: String, required: false, default: null}
+    vendorId: { type: String, required: false, default: null},
     profilePic: { type: String, required: false, unique: false },
 });
 const User = model<IUser>('User', userSchema);

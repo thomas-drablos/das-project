@@ -32,13 +32,18 @@ const NavBar: React.FC = () => {
                 type="button"
                 onClick={toggleDropdown}
               >
-                {user.loading ? '...' : (user.name || 'User')}
+                {user.loading ? "..." : user.name || "User"}
               </button>
               {dropdownOpen && (
                 <ul className="dropdown-menu show">
                   <li>
-                    <Link to="/profile" className="dropdown-item">
-                      Profile
+                    <Link
+                      to={user.name === "CometAdmin" ? "/admin" : "/profile"}
+                      className="dropdown-item"
+                    >
+                      {user.name === "CometAdmin"
+                        ? "Admin Dashboard"
+                        : "Profile"}
                     </Link>
                   </li>
                   <li>

@@ -2,7 +2,7 @@ import { NextFunction, Request, Response, Router } from "express";
 import { requireAuth } from "./auth";
 import User from "./models/user";
 
-const UserController: Router = Router({mergeParams: true});
+const UserController: Router = Router({ mergeParams: true });
 
 const enforceSameUser = async (req: Request, res: Response, next: NextFunction) => {
     if (!req.auth) {
@@ -10,7 +10,7 @@ const enforceSameUser = async (req: Request, res: Response, next: NextFunction) 
     }
 
     const targetId = req.params.id;
-    const user = await User.findOne({auth0Id: req.auth.payload.sub}, '-auth0Id');
+    const user = await User.findOne({ auth0Id: req.auth.payload.sub }, '-auth0Id');
     if (user === null || user.userId !== targetId) {
         throw new Error('Unauthorized');
     }
@@ -45,20 +45,20 @@ UserController.post('/name', async (req: Request, res: Response) => {
             return;
         }
 
-        const newName = req.query.name as string|undefined;
+        const newName = req.body.name as string | undefined;
         if (newName === undefined) {
             res.status(400).json('Must specify name in query parameter');
             return;
         }
-        if (newName.length >= 5) {
+        if (newName.length < 5) {
             res.status(400).json('Name must be at least 5 characters long');
             return;
         }
 
         // Update database
-        await User.updateOne({userId: req.userInfo.id}, {name: newName});
+        await User.updateOne({ userId: req.userInfo.id }, { name: newName });
         res.status(200).json('Successfully updated user name');
-    } catch (err){
+    } catch (err) {
         res.status(500).json('Failed to update user name');
     }
 });

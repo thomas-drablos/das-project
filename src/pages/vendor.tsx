@@ -1,14 +1,13 @@
 // src/pages/vendor.tsx
-import React, { useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Card, Button } from "react-bootstrap";
+import { Card } from "react-bootstrap";
 import { useAppUser } from "../contexts/appUserContext";
 import { useApiToken } from "../contexts/apiTokenContext";
-import { useState, useEffect } from "react";
 import { getJson, patchJson, postJson } from "../util";
 
 const VendorPage: React.FC = () => {
-  const { id } = useParams();
+  const { id } = useParams();   //vendor ID
 
   const { loading, userId, name } = useAppUser()
   const { apiToken } = useApiToken()
@@ -32,9 +31,8 @@ const VendorPage: React.FC = () => {
   const [reviewRating, setReviewRating] = useState<number>(0)
   const [reviewContent, setReviewContent] = useState<string>('')
 
-
   useEffect(() => {
-    if(apiToken != undefined) {
+    if (apiToken != undefined) {
       getJson(`http://localhost:8000/api/user/${userId}`, apiToken).then(setUserInfo)
     }
     getJson(`http://localhost:8000/api/vendor/${id}`).then(setVendor)
@@ -64,7 +62,12 @@ const VendorPage: React.FC = () => {
     }
     else if (imageChange == 'delete') {
       const updatedImages = [...vendor.photos]
-      updatedImages.splice(index, 1)
+      if (index == 0) {
+        updatedImages[0] = null
+      }
+      else {
+        updatedImages.splice(index, 1)
+      }
       patchJson(`http://localhost:8000/api/vendor/${id}/photos/delete`, { id: id, index: index }, apiToken)
       setVendor({ ...vendor, photos: updatedImages })
     }
@@ -79,27 +82,50 @@ const VendorPage: React.FC = () => {
     setVendor({ ...vendor, photos: updatedImages })
   }
 
-  const handleDM = () => {
-    //alert('moving to DM w/ ' + vendor.name)
-    // some API call to get the chat ID
-    navigate(`/dms/${userId}`)  // TODO: need to get the chat ID and replace w/ userId
+  const handleDM = async () => {
+    let conversationId: string
+    await getJson(`http://localhost:8000/api/chat?vendor=${id}`, apiToken).then(async (result: any) => {
+      // there is no conversation that exists, make one
+      if (result.length == 0) {
+        await postJson(`http://localhost:8000/api/chat/create`, { vendor: id }, apiToken).then((chat) => {
+          conversationId = chat._id
+        })
+      }
+      else {
+        conversationId = result[0]._id
+      }
+      navigate(`/dms/${conversationId}`)
+    })
   }
 
   const handleReviewSubmission = () => {
-    postJson(`http://localhost:8000/api/review/create`, {vendor: id, text: reviewContent, rating: reviewRating}, apiToken)
+    if (reviewContent == '' || reviewRating <= 0 || reviewRating > 6) {
+      return
+    }
+    postJson(`http://localhost:8000/api/review/create`, { vendor: id, text: reviewContent, rating: reviewRating }, apiToken)
     const review = {
       name: userInfo.name,
       rating: reviewRating,
-      content: reviewContent
+      text: reviewContent,
+      hidden: false
     }
     const updatedReviews = [...vendor.reviews, review]
-    setVendor({...vendor, reviews: updatedReviews})
+    setVendor({ ...vendor, reviews: updatedReviews })
+    console.log(updatedReviews)
     setReviewContent('')
     setReviewRating(0)
   }
 
   const handleHidden = () => {
-    patchJson(`http://localhost:8000/api/vendor/${id}/hide`, apiToken)
+    patchJson(`http://localhost:8000/api/vendor/${id}/hide`, {}, apiToken)
+  }
+
+  const handleHideReview = (index: number) => {
+    const isHidden = vendor.reviews[index].hidden
+    const updatedReviews = [...vendor.reviews]
+    updatedReviews[index] = { ...updatedReviews[index], hidden: !isHidden }
+    setVendor({ ...vendor, reviews: updatedReviews })
+    patchJson(`http://localhost:8000/api/review/${vendor.reviews[index]._id}/hide/${index}`, {}, apiToken)
   }
 
   return (
@@ -119,7 +145,7 @@ const VendorPage: React.FC = () => {
                 objectFit: "cover",
                 marginRight: "10px",
               }}
-              onClick={() => {if(myPage) {handleImageClick(0)}}}
+              onClick={() => { if (myPage) { handleImageClick(0) } }}
             />
             <input
               type='file'
@@ -185,7 +211,7 @@ const VendorPage: React.FC = () => {
             </>)
             :
             (<>
-              <p>{vendor.description == '' ? (<>Please enter description here...</>) : (<>{vendor.description}</>)}</p>
+              <p>{myPage && vendor.description == '' ? (<>Please enter description here...</>) : (<>{vendor.description}</>)}</p>
             </>)}
 
         </div>
@@ -211,7 +237,12 @@ const VendorPage: React.FC = () => {
                 <span key={tag} className="badge bg-success me-2">
                   {tag}
                 </span>
-              )) : <p>Please type your tags here separated by spaces...</p>}
+              ))
+                :
+                (<>
+                  {myPage ? (<p>Please type your tags here separated by spaces...</p>) : (<></>)}
+                </>
+                )}
             </>
             )}
         </div>
@@ -246,7 +277,7 @@ const VendorPage: React.FC = () => {
         <div className="row">
           {myPage ?
             (<>
-              <button onClick={() => {if(myPage){newImageInputRef.current?.click()}}}>Click here to add more images.</button>
+              <button onClick={() => { if (myPage) { newImageInputRef.current?.click() } }}>Click here to add more images.</button>
               <input
                 type="file"
                 accept="image/*"
@@ -271,7 +302,7 @@ const VendorPage: React.FC = () => {
               />
               <Card className="mb-3">
                 <Card.Body>
-                  <Card.Img variant="top" src={photo} onClick={() => {if(myPage) {handleImageClick(index + 1)}}} />
+                  <Card.Img variant="top" src={photo} onClick={() => { if (myPage) { handleImageClick(index + 1) } }} />
                 </Card.Body>
               </Card>
             </div>
@@ -280,22 +311,30 @@ const VendorPage: React.FC = () => {
 
 
         {/*Reviews -- cannot be edited only seen*/}
-        {/* TODO: put the actually info w/ correct syntax */}
         <h4>Reviews</h4>
-        {!myPage && apiToken != undefined && (
+        {!myPage && apiToken && (
           <>
             <label>
               Rating:
-              <input
-                type="number"
-                min="1"
-                max="5"
-                value={reviewRating}
-                onChange={(e) => setReviewRating(Number(e.target.value))}
-              />
-            </label><br/>
+              <div style={{ fontSize: "1.8rem", cursor: "pointer" }}>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <span
+                    key={star}
+                    onClick={() => setReviewRating(star)}
+                    style={{
+                      color: star <= reviewRating ? "#ffc107" : "#e4e5e9",
+                      marginRight: "5px",
+                    }}
+                  >
+                    ★
+                  </span>
+                ))}
+              </div>
+            </label>
+            <br />
             <label>
-              Review:<br/>
+              Review:
+              <br />
               <textarea
                 rows={5}
                 cols={120}
@@ -304,23 +343,47 @@ const VendorPage: React.FC = () => {
                 onChange={(e) => setReviewContent(e.target.value)}
               />
             </label>
-            <br/><button onClick={handleReviewSubmission}>Submit Review</button>
+            <br />
+            <button onClick={handleReviewSubmission}>Submit Review</button>
           </>
         )}
-        <hr/>
-        <div style={{maxHeight: '500px', overflowY: 'auto'}}>
-          {vendor.reviews[0] != null && vendor.reviews.map((review:{name:string, rating: number, content: string}) => (
-            <div>
-              <p><strong>Name: {review.name}</strong> <strong>Rating: </strong>{review.rating}</p>
-              <br />
-              <p>{review.content}</p>
-              <hr />
-            </div>
-          ))}
+        <hr />
+        <div style={{ maxHeight: "500px", overflowY: "auto" }}>
+          {vendor?.reviews.map((review:any, idx: number) => (
+            <>
+              {(review != null && (review.hidden == false || userInfo?.isAdmin)) &&
+                (<div key={idx} style={{ marginBottom: "20px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
+                    <p style={{ fontWeight: "bold", fontSize: "1.1rem", margin: 0 }}>
+                      "{review.name}"
+                    </p>
+                    <div>
+                      {[...Array(5)].map((_, i) => (
+                        <span
+                          key={i}
+                          style={{
+                            color: i < review.rating ? "#ffc107" : "#e4e5e9",
+                            fontSize: "1.2rem",
+                          }}
+                        >
+                          ★
+                        </span>
+                      ))}
+                    </div>
+                    {userInfo?.isAdmin ? (<><button onClick={() => { handleHideReview(idx) }}>{review.hidden ? "Unhide" : "Hide"}</button></>) : (<></>)}
+                  </div>
+                  <p style={{ fontStyle: "italic", marginLeft: "5px", marginBottom: "8px" }}>
+                    {review.text}
+                  </p>
+                  <hr style={{ borderTop: "1px solid #ccc", margin: "0" }} />
+                </div>)
+              }
+            </>))
+          }
         </div>
       </div>
     )
-  )
+  );
 };
 
 export default VendorPage;
