@@ -128,6 +128,27 @@ ReviewController.patch('/:id/hide', async (req, res) => {
 
   review.hidden = !review.hidden;
   await review.save();
+
+  //find vendor
+  const vendorObj = await Vendor.findById(review.vendor._id);
+  if(!vendorObj){
+    res.status(404).json("Vendor for this review not found.");
+    return;
+  }
+
+  //find which index of vendor's array review is
+  var count = 0;
+  var index = 0;
+  while(vendorObj.reviews[count]){
+    if(vendorObj.reviews[count]._id === review._id){
+      index = count;
+      break;
+    }
+    count++;
+  }
+
+  //update vendor
+  vendorObj.reviews[index] = review;
   res.status(200).json("Successfully toggled vendor's hidden status");
 });
 
