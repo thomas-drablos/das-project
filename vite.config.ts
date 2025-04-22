@@ -6,6 +6,7 @@ const SSL_PRIVATE_KEY = 'secrets/web.key';
 const SSL_CERTIFICATE = 'secrets/web.crt';
 const API_CERTIFICATE = 'secrets/api.crt';
 const ENABLE_HTTPS = false;
+const API_IS_USING_HTTPS = false;
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -18,13 +19,13 @@ export default defineConfig({
     proxy: {
       '/api': {
         target: {
-          protocol: 'https:',
+          protocol: API_IS_USING_HTTPS ? 'https:' : 'http:',
           host: 'localhost',
           port: 8000,
           ca: ENABLE_HTTPS ? fs.readFileSync(API_CERTIFICATE).toString() : undefined,
         },
         changeOrigin: true,
-        secure: true,
+        secure: ENABLE_HTTPS,
       },
     },
   },
