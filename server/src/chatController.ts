@@ -29,13 +29,13 @@ const verifyChatAccess = async (req: Request, res: Response, next: NextFunction)
     .populate({ path: 'user', select: '-id name auth0Id email'});
 
   if (!chat) {
-    res.status(404).json('Chat not found');
+    res.status(404).json({ message: "Chat not found" });
     return;
   }
 
   if (chat.user.auth0Id !== auth0Id && chat.vendor.user.auth0Id !== auth0Id)
     {
-      res.status(403).json('Forbidden');
+      res.status(403).json({ message: 'Forbidden' });
       return;
   }
 
@@ -76,7 +76,7 @@ ChatController.get('/:id', verifyChatAccess, async (req, res) => {
   //already verified chat access
   //find the chat 
   const inputId = req.params.id;
-  const chatObj = await Chat.findById({ inputId })
+  const chatObj = await Chat.findById( inputId )  //Fixed: pass Id as string, not object
   .populate([{ path: 'user', select: '-_id name'}, { path: 'vendor', select: 'name'}])
   .select('user vendor time messages invoices');
   res.json(chatObj);
@@ -84,9 +84,9 @@ ChatController.get('/:id', verifyChatAccess, async (req, res) => {
 
 // POST /create - basic create chat
 ChatController.post('/create', async (req, res) => {
-  const { vendor } = req.body;
+  const { vendor: vendorId } = req.body;
 
-  if (!vendor) {
+  if (!vendorId) {
     res.status(400).json('Missing vendor');
     return;
   }
@@ -99,106 +99,158 @@ ChatController.post('/create', async (req, res) => {
     return;
   }
 
-  const vendorObj = await Vendor.findById(vendor);
+  const vendorObj = await Vendor.findById(vendorId);
   if (!vendorObj) {
     res.status(404).json('Vendor not found');
     return; 
   }
 
   // Prevent duplicate chat between same user and vendor
+  // Fixed:
   const existingChat = await Chat.findOne({
-    'user.id': userObj.auth0Id,
-    'vendor.id': vendor.id
-  });
+    user: userObj._id,
+    vendor: vendorObj._id
+  });  
     
   if (existingChat) {
-    res.status(409).json({ message: 'Chat already exists', chat: existingChat });
+    res.status(409).json({ message: 'Chat already exists', chat: existingChat._id });
     return;
   }
 
   const chat = await Chat.create({
     user: userObj._id,
-    vendor: vendor,
+    vendor: vendorObj._id,
     time: new Date(),
     messages: [],
     invoices: [],
   });
 
   const returnChat = await Chat.findById(chat._id)
-    .populate({ path: 'user', select: '-id name' })
+    .populate({ path: 'user', select: '-_id name' })
     .populate({ path: 'vendor', select: 'name' });
 
   res.status(201).json(returnChat);
 });
 
 ChatController.get('/:id/messages', verifyChatAccess, async (req, res) => {
-  const chat = req.params.id;
+  try {
+    const chat = req.chat!;
+    const messages = chat.messages
+      .sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime())
+      .map(msg => ({
+        text: msg.text,
+        time: msg.time,
+        sender: msg.sender,
+        user: {
+          name: chat.user.name,
+          email: chat.user.email
+        },
+        vendor: {
+          _id: chat.vendor._id,
+          name: chat.vendor.name
+        }
+      }));
 
-  const existingChat = await Chat.findById(chat);
-  if (!existingChat) {
-    res.status(404).json('Chat not found');
-    return; 
+    res.json(messages);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to fetch messages' });
   }
-  res.json(existingChat.messages.sort((a, b) => +new Date(a.time) - +new Date(b.time)));});
+});
 
+// ChatController.post('/:id/messages', verifyChatAccess, async (req, res) => {
+//   const chat = req.params.id;
+//   const chatObj = await Chat.findById(chat)
+//   .populate({path: 'vendor', populate: { path: 'user', select: '-_id'}})
+//   .populate({ path: 'user', select: '-_id'});
 
+//   if (chatObj == null || chatObj == undefined) {
+//     res.status(404).json({ message: "Chat not found" });
+//     return;
+//   }
+//   const auth0Id = req.auth?.payload.sub;
+//   const userObj = await User.findOne({ auth0Id }); 
+//   if (!userObj) {
+//     res.status(404).json("User not found.");
+//     return;
+//   }
+//   // ensuring that the current user is a vendor
+//   let sender:any, receiver:any
+//   if (userObj.vendorId != chatObj.vendor._id) {
+//     sender = chatObj.vendor._id
+//     receiver = chatObj.user
+//   } else {
+//     sender = chatObj.user
+//     receiver = chatObj.vendor._id
+//   }
+//   const { text } = req.body;
+
+//   if (!text) {
+//     res.status(400).json('Missing message text');
+//     return;
+//   }
+
+//   const newMessage: IMessage | any = {
+//     text,
+//     time: new Date(),
+//     user: sender,
+//     vendor: receiver,
+//   };
+//    /*sender: chat?.user.id === req.auth?.payload.sub ? 'user' : 'vendor',
+//     user: {
+//      id: chat?.user.id!,
+//       name: chat?.user.name,
+//       email: chat?.user.email,
+//     },
+//     vendor: {
+//       id: chat?.vendor.id!,
+//       name: chat?.vendor.name,
+//       email: chat?.vendor.user.email, BHUVAN: where is this coming from?
+//     }
+//   }
+//   */
+//   chatObj.messages.push(newMessage);
+//   await chatObj.save();
+  
+//   newMessage.populate({ path: 'vendor', select: 'name'})
+//   .populate({ path: 'user', select: '-_id name email'});
+//   res.status(201).json(newMessage);
+// });
+
+// Corrected Version 
 ChatController.post('/:id/messages', verifyChatAccess, async (req, res) => {
-  const chat = req.params.id;
-  const chatObj = await Chat.findById(chat)
-  .populate({path: 'vendor', populate: { path: 'user', select: '-_id'}})
-  .populate({ path: 'user', select: '-_id'});
-
-  if (chatObj == null || chatObj == undefined) {
-    res.status(500).json('Chat not found')
-    return;
-  }
+  const chat = req.chat!;
   const auth0Id = req.auth?.payload.sub;
-  const userObj = await User.findOne({ auth0Id }); 
-  if (!userObj) {
-    res.status(404).json("User not found.");
-    return;
-  }
-  // ensuring that the current user is a vendor
-  let sender:any, receiver:any
-  if (userObj.vendorId != chatObj.vendor._id) {
-    sender = chatObj.vendor._id
-    receiver = chatObj.user
-  } else {
-    sender = chatObj.user
-    receiver = chatObj.vendor._id
-  }
   const { text } = req.body;
 
-  if (!text) {
+  if (!text){
     res.status(400).json('Missing message text');
     return;
   }
 
-  const newMessage: IMessage | any = {
+  const userObj = await User.findOne({ auth0Id });
+  if (!userObj)  {
+    res.status(404).json('User not found');
+    return;
+  }
+
+  const isVendor = userObj.vendorId?.toString() === (chat.vendor as any)._id.toString();
+
+  const newMessage: IMessage = {
     text,
     time: new Date(),
-    user: sender,
-    vendor: receiver,
+    user: isVendor ? chat.vendor._id : chat.user._id,
+    vendor: isVendor ? chat.user._id : chat.vendor._id,
+    sender: isVendor ? 'vendor' : 'user',
   };
-   /*sender: chat?.user.id === req.auth?.payload.sub ? 'user' : 'vendor',
-    user: {
-     id: chat?.user.id!,
-      name: chat?.user.name,
-      email: chat?.user.email,
-    },
-    vendor: {
-      id: chat?.vendor.id!,
-      name: chat?.vendor.name,
-      email: chat?.vendor.user.email, BHUVAN: where is this coming from?
-    }
-  }
-  */
-  chatObj.messages.push(newMessage);
-  await chatObj.save();
-  
-  newMessage.populate({ path: 'vendor', select: 'name'})
-  .populate({ path: 'user', select: '-_id name email'});
-  res.status(201).json(newMessage);
+
+  chat.messages.push(newMessage);
+  await chat.save();
+
+  const savedMessage = chat.messages[chat.messages.length - 1];
+
+  res.status(201).json(savedMessage); // Or manually attach names/emails if needed
 });
+
 
 export default ChatController;
