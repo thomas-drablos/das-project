@@ -36,3 +36,9 @@
     /* Optional: Add a focus ring for accessibility */
     box-shadow: 0 0 0 0.2rem rgba(23, 67, 27, 0.25); /* UTD Orange focus ring */
   }
+
+  /* SearchBar.css */
+.search-button:hover {
+  background-color: #036f36 !important; /* A slightly darker shade of UTD Green */
+  border-color: #036f36 !important;
+}

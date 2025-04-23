@@ -88,7 +88,7 @@ const SearchBar: React.FC = () => {
         />
         <button
           type="submit"
-          className="btn btn-success ms-2"
+          className="btn btn-success ms-2 search-button"
           style={{ backgroundColor: "#008540", borderColor: "#008540" }}
         >
           {" "}

@@ -29,9 +29,9 @@ const User: React.FC = () => {
         `http://localhost:8000/api/vendor/create`,
         { name: userInfo.name },
         apiToken
-      ).then((vendor) => {
+      ).then((vendor: any) => {
         navigate(`/vendor/${vendor._id}`);
-      })
+      });
     } else if (typeof userInfo === "object") {
       navigate(`/vendor/${userInfo.vendorId}`);
     }
@@ -70,7 +70,16 @@ const User: React.FC = () => {
             onChange={(e) => {
               const file = e.target.files?.[0];
               if (file) {
-                const fakeUrl = `../../public/images/${file.name}`; // Simulate image path
+                const sanitizeFilenameForURL = (filename: any) => {
+                  // Allow only alphanumeric, hyphens, underscores, and periods
+                  return filename.replace(/[^a-zA-Z0-9._-]/g, "");
+                };
+
+                const sanitizedFilename = sanitizeFilenameForURL(file.name);
+                const fakeUrl = `../../public/images/${encodeURIComponent(
+                  sanitizedFilename
+                )}`; // URL-encode the filename
+
                 postJson(
                   `http://localhost:8000/api/user/${userId}/profile-pic`,
                   { profilePic: fakeUrl },
