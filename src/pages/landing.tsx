@@ -1,7 +1,7 @@
 // src/pages/LandingPage.tsx
 import React from "react";
 import SearchBar from "../components/Searchbar"; // Import SearchBar
-import AllVendors from '../components/AllVendors'
+import AllVendors from "../components/AllVendors";
 
 const LandingPage: React.FC = () => {
   return (
@@ -25,7 +25,11 @@ const LandingPage: React.FC = () => {
         }}
       />
       <SearchBar />
-      <AllVendors/>
+      <div className="mt-5">
+        {" "}
+        {/* Add a top margin using Bootstrap */}
+        <AllVendors />
+      </div>
     </div>
   );
 };

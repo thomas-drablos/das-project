@@ -2,11 +2,13 @@
 import React, { useState, ChangeEvent, FormEvent, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { getJson } from "../util";
+import DOMPurify from "dompurify"; // Import DOMPurify
+import "./SearchBar.css"; // Import the CSS file
 
 const SearchBar: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [suggestions, setSuggestions] = useState<any>([]);
-  const [searchType, setSearchType] = useState<'all' | 'name' | 'tags'>('all')
+  const [searchType, setSearchType] = useState<"all" | "name" | "tags">("all");
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -20,20 +22,26 @@ const SearchBar: React.FC = () => {
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchTerm(value);
-    const listTag = value.split(" ")
-    if (value == "" || (suggestions.length == 1 && listTag[listTag.length - 1].toLowerCase().trim() == suggestions[0])) {
-      setSuggestions([])
-      return
+    const listTag = value.split(" ");
+    if (
+      value === "" ||
+      (suggestions.length === 1 &&
+        listTag[listTag.length - 1].toLowerCase().trim() === suggestions[0])
+    ) {
+      setSuggestions([]);
+      return;
     }
-    const response = getJson(`http://localhost:8000/api/vendor/suggestions/${value}/${searchType}`)
+    const response = getJson(
+      `http://localhost:8000/api/vendor/suggestions/${value}/${searchType}`
+    );
     response.then((results) => {
-      setSuggestions(results)
-    })
+      setSuggestions(results);
+    });
   };
 
   return (
     <div style={{ width: "60%", position: "relative" }}>
-      <div>
+      <div style={{ paddingBottom: "10px" }}>
         Search by:&nbsp;
         <label>
           <input
@@ -42,6 +50,7 @@ const SearchBar: React.FC = () => {
             value="all"
             checked={searchType === "all"}
             onChange={() => setSearchType("all")}
+            className="custom-radio-input"
           />
           All&nbsp;
         </label>
@@ -52,6 +61,7 @@ const SearchBar: React.FC = () => {
             value="name"
             checked={searchType === "name"}
             onChange={() => setSearchType("name")}
+            className="custom-radio-input"
           />
           Name&nbsp;
         </label>
@@ -62,6 +72,7 @@ const SearchBar: React.FC = () => {
             value="tag"
             checked={searchType === "tags"}
             onChange={() => setSearchType("tags")}
+            className="custom-radio-input"
           />
           Tag
         </label>
@@ -71,33 +82,43 @@ const SearchBar: React.FC = () => {
           type="text"
           className="form-control"
           ref={inputRef}
-          placeholder="Search for vendors, skills..."
+          placeholder="Search. . ."
           value={searchTerm}
           onChange={handleChange}
         />
-        <button type="submit" className="btn btn-success ms-2">
+        <button
+          type="submit"
+          className="btn btn-success ms-2"
+          style={{ backgroundColor: "#008540", borderColor: "#008540" }}
+        >
+          {" "}
+          {/* UTD Green for button */}
           Search
         </button>
       </form>
       {suggestions.length > 0 && (
         <ul className="list-group position-absolute w-100 z-3">
-          {suggestions.map((s) => (
+          {suggestions.map((s: any) => (
             <li
               key={s}
               className="list-group-item list-group-item-action"
               onClick={() => {
-                const terms = searchTerm.trim().split(" ")
-                terms[terms.length - 1] = s
-                setSearchTerm(terms.join(' ') + ' ')
-                setSuggestions([])
+                const terms = searchTerm.trim().split(" ");
+                terms[terms.length - 1] = s;
+                setSearchTerm(terms.join(" ") + " ");
+                setSuggestions([]);
                 if (inputRef.current) {
-                  inputRef.current.focus()
+                  inputRef.current.focus();
                 }
               }}
-              style={{cursor: "pointer"}}
-              >
-                {s}
-              </li>
+              style={{ cursor: "pointer" }}
+            >
+              <span
+                dangerouslySetInnerHTML={{
+                  __html: DOMPurify.sanitize(s || ""),
+                }}
+              />
+            </li>
           ))}
         </ul>
       )}

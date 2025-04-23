@@ -1,0 +1,38 @@
+/* src/components/SearchBar.css */
+
+.custom-radio-input {
+    /* Hide the default radio button appearance */
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    width: 1em;
+    height: 1em;
+    border: 1px solid #008540; /* UTD Green */
+    border-radius: 50%;
+    outline: none;
+    cursor: pointer;
+    vertical-align: middle; /* Align with the label text */
+    margin-right: 0.4em; /* Add some spacing to the right of the circle */
+    background-color: #ffffff; /* UTD Green fill */
+  }
+  
+  .custom-radio-input::before {
+    content: '';
+    display: block;
+    width: 0; /* Initially no inner circle */
+    height: 0;
+    border-radius: 50%;
+    background-color: transparent;
+    margin: auto;
+  }
+  
+  .custom-radio-input:checked::before {
+    width: 0.9em; /* Make the inner circle same size as green border */
+    height: 0.9em;
+    background-color: #ec7524; /* UTD Orange */
+  }
+  
+  .custom-radio-input:focus {
+    /* Optional: Add a focus ring for accessibility */
+    box-shadow: 0 0 0 0.2rem rgba(23, 67, 27, 0.25); /* UTD Orange focus ring */
+  }

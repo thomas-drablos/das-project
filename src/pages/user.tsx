@@ -2,8 +2,9 @@
 import React, { useState, useEffect } from "react";
 import { useAppUser } from "../contexts/appUserContext";
 import { useApiToken } from "../contexts/apiTokenContext";
-import { getJson, patchJson, postJson } from "../util";
+import { getJson, postJson } from "../util";
 import { useNavigate } from "react-router-dom";
+import DOMPurify from "dompurify"; // Import DOMPurify
 
 const User: React.FC = () => {
   const { loading, userId, name } = useAppUser();
@@ -24,9 +25,12 @@ const User: React.FC = () => {
 
   const handleVendor = async () => {
     if (typeof userInfo === "object" && userInfo.vendorId == null) {
-      await postJson(`http://localhost:8000/api/vendor/create`, { name: userInfo.name }, apiToken).then((page:any) => {
-        navigate(`/vendor/${page._id}`)
-      })
+      await postJson(
+        `http://localhost:8000/api/vendor/create`,
+        { name: userInfo.name },
+        apiToken
+      );
+      window.location.reload();
     } else if (typeof userInfo === "object") {
       navigate(`/vendor/${userInfo.vendorId}`);
     }
@@ -66,7 +70,11 @@ const User: React.FC = () => {
               const file = e.target.files?.[0];
               if (file) {
                 const fakeUrl = `../../public/images/${file.name}`; // Simulate image path
-                postJson(`http://localhost:8000/api/user/${userId}/profile-pic`, { profilePic: fakeUrl }, apiToken);
+                postJson(
+                  `http://localhost:8000/api/user/${userId}/profile-pic`,
+                  { profilePic: fakeUrl },
+                  apiToken
+                );
                 setUserInfo({ ...userInfo, profilePic: fakeUrl });
               }
             }}
@@ -80,22 +88,42 @@ const User: React.FC = () => {
         </div>
 
         {/* Editable Name */}
-        <div onClick={() => { setEditName(true); setNewName(userInfo.name); }}>
+        <div
+          onClick={() => {
+            setEditName(true);
+            setNewName(userInfo.name);
+          }}
+        >
           {editName ? (
             <input
               type="text"
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               onBlur={() => {
-                const response = patchJson(`http://localhost:8000/api/user/${userId}/name`, { name: newName }, apiToken);
-                response.then((result) => console.log("try to change name:", result));
-                setUserInfo({ ...userInfo, name: newName });
+                const sanitizedNewName = DOMPurify.sanitize(newName); // Sanitize before sending
+                const response = postJson(
+                  `http://localhost:8000/api/user/${userId}/name`,
+                  { name: sanitizedNewName },
+                  apiToken
+                );
+                response.then((result) =>
+                  console.log("try to change name:", result)
+                );
+                setUserInfo({ ...userInfo, name: sanitizedNewName });
                 setEditName(false);
               }}
               autoFocus
             />
           ) : (
-            <h2>{userInfo.name}</h2>
+            <h2>
+              <h2>
+                <span
+                  dangerouslySetInnerHTML={{
+                    __html: DOMPurify.sanitize(userInfo.name || ""),
+                  }}
+                />
+              </h2>
+            </h2>
           )}
         </div>
 
@@ -104,7 +132,11 @@ const User: React.FC = () => {
 
         {/* Vendor Link */}
         <br />
-        {!userInfo.isAdmin ? <button onClick={handleVendor}>Vendor Page</button> : <></>}
+        {!userInfo.isAdmin ? (
+          <button onClick={handleVendor}>Vendor Page</button>
+        ) : (
+          <></>
+        )}
       </div>
     )
   );
