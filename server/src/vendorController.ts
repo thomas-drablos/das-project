@@ -235,7 +235,15 @@ VendorController.patch('/:id/photos/add', requireAuth, async (req, res) => {
     const url = req.body;
     const id = req.params.id;
 
-    //input validation
+    //input validation - appropriate length, type, etc.
+    if (
+      !url ||
+      typeof url !== 'string' ||  
+      !(url.startsWith('https://'))
+    ) {
+      res.status(400).json("Invalid image URL.");
+      return
+    }
 
     //get vendor
     const vendorObj = await Vendor.findById(id)
@@ -271,6 +279,13 @@ VendorController.patch('/:id/photos/delete', requireAuth, async (req, res) => {
     const id = req.params.id;
 
     //input validation
+    if (
+      !index ||
+      typeof index !== 'number'
+    ) {
+      res.status(400).json("Invalid image index.");
+      return;
+    }
 
     //get vendor
     const vendorObj = await Vendor.findById(id)
@@ -385,6 +400,13 @@ VendorController.patch('/:id/tags/delete', requireAuth, async (req, res) => {
     const id = req.params.id;
 
     //input validation
+    if (
+      !index ||
+      typeof index !== 'number'
+    ) {
+      res.status(400).json("Invalid tag index.");
+      return;
+    }
 
     //get vendor
     const vendorObj = await Vendor.findById(id)
