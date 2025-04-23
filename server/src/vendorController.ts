@@ -40,6 +40,13 @@ VendorController.get('/:id', async (req, res) => {
           return;
         }
         //return visible vendor
+        res.json({
+          name: vendor.name,
+          photos: vendor.photos,
+          description: vendor.description,
+          tags: vendor.tags,
+          reviews: vendor.reviews
+        });
 
       } else { //if logged in 
         const userObj = await User.findOne({ auth0Id });
