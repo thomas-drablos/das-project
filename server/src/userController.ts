@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response, Router } from "express";
 import { requireAuth } from "./auth";
 import User from "./models/user";
+import { auth } from "express-oauth2-jwt-bearer";
 
 const UserController: Router = Router({mergeParams: true});
 
@@ -30,7 +31,7 @@ UserController.use(requireAuth);
 UserController.use(enforceSameUser);
 
 // GET / - get user info
-UserController.get('/', (req: Request, res: Response) => {
+UserController.get('/', (req: Request, res: Response) => { //check permissions??
     try{
         if (!req.userInfo) {
             res.status(500).json();
@@ -39,9 +40,30 @@ UserController.get('/', (req: Request, res: Response) => {
 
         res.json(req.userInfo);
     } catch (err){
-        console.error(err);
-        res.status(500).json("Failed to fetch user info");
+      console.error(err);
+      res.status(500).json("Failed to fetch user info");
     }
+});
+
+//GET /all - get all users (admin)
+UserController.get('/all', async (req, res) => {
+  try{
+    //check permissions, must be admin
+    const auth0Id = req.auth?.payload.sub;
+    if(!auth0Id){
+      res.status(403).json("Forbidden");
+      return;
+    }
+
+    //do not return db id, select attributes
+    const users = await User.find()
+    .select('name email profilePic');
+
+    res.json(users);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json("Failed to fetch user info");
+  }
 });
 
 // PATCH /name - set user name
@@ -83,13 +105,15 @@ UserController.patch('/:id/profile-pic', requireAuth, async (req, res) => {
       // Get user
       const userObj = await User.findOne({ userId: id });
       if (!userObj) {
-        return res.status(404).json("User not found");
+        res.status(404).json("User not found");
+        return;
       }
   
       // Check permissions
       const auth0Id = req.auth?.payload.sub;
       if (userObj.auth0Id !== auth0Id && !userObj.isAdmin) {
-        return res.status(403).json("Forbidden");
+        res.status(403).json("Forbidden");
+        return;
       }
   
       // Update profilePic
@@ -111,13 +135,15 @@ UserController.patch('/:id/profile-pic/delete', requireAuth, async (req, res) =>
       // Get user
       const userObj = await User.findOne({ userId: id });
       if (!userObj) {
-        return res.status(404).json("User not found");
+        res.status(404).json("User not found");
+        return;
       }
   
       // Check permissions
       const auth0Id = req.auth?.payload.sub;
       if (userObj.auth0Id !== auth0Id && !userObj.isAdmin) {
-        return res.status(403).json("Forbidden");
+        res.status(403).json("Forbidden");
+        return;
       }
   
       // Delete profilePic
@@ -131,5 +157,25 @@ UserController.patch('/:id/profile-pic/delete', requireAuth, async (req, res) =>
     }
 });
   
+// PATCH /hide - toggle hidden status
+UserController.patch('/hide', async (req, res) => {
+  try{
+    const auth0Id = req.auth?.payload.sub;
+    //get user
+    const user = await User.findById({ auth0Id });
+    if(!user){
+      res.status(404).json("User not found");
+      return;
+    }
+
+    //change hidden
+    user.hidden = !user.hidden;
+    await user.save();
+    res.status(200).json("Successfully toggled user's hidden status");
+  } catch (err){
+    console.error(err);
+    res.status(500).json("Failed to toggle user's hidden status");
+  }
+})
 
 export default UserController;

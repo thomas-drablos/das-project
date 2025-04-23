@@ -9,6 +9,7 @@ export interface IUser {
     auth0Id: string;
     vendorId: string;
     profilePic: string;
+    hidden: boolean;
 }
 
 export const userSchema = new Schema<IUser>({
@@ -19,6 +20,7 @@ export const userSchema = new Schema<IUser>({
     auth0Id: { type: String, required: true, unique: true },
     vendorId: { type: String, required: true, unique: true },
     profilePic: { type: String, required: false, unique: false },
+    hidden: { type: Boolean, required: true, default: false },
 });
 const User = model<IUser>('User', userSchema);
 export default User;
