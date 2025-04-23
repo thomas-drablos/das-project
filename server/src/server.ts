@@ -1,5 +1,8 @@
 import express from 'express';
+import cors from 'cors';
 import dotenv from 'dotenv';
+import fs from 'fs';
+import https from 'https';
 import session from 'express-session';
 import bodyParser from 'body-parser';
 import mongoose from 'mongoose';
@@ -34,6 +37,12 @@ mongoose.connect(process.env.DB_CONN_STRING || '');
 // Configure application
 const app = express();
 
+// Set CORS policy: only allow app origin
+app.use(cors({
+    origin: process.env.CORS_ALLOWED_ORIGIN,
+    allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+
 app.use(bodyParser.json());
 
 // TODO: Warning The default server-side session storage, MemoryStore, is purposely not designed for a production environment. It will leak memory under most conditions, does not scale past a single process, and is meant for debugging and developing.
@@ -50,6 +59,23 @@ app.use(session({
 app.use('/api', api);
 // app.use(express.static(path.join(__dirname, '../dist')));
 
-app.listen(port, () => {
-    console.log(`Server is listening on port ${port}`);
-});
+if (process.env.ENVIRONMENT !== 'DEV' || process.env.ENABLE_HTTPS === "true") {
+    if (process.env.ENVIRONMENT === 'DEV' && process.env.ENABLE_HTTPS !== "true")
+        console.log('HTTPS cannot be disabled outside of environment DEV, proceeding with HTTPS anyways');
+
+    const privateKey = fs.readFileSync(process.env.SSL_PRIVATE_KEY || '').toString();
+    const certificate = fs.readFileSync(process.env.SSL_CERTIFICATE || '').toString();
+
+    const credentials = {key: privateKey, cert: certificate};
+
+    const server = https.createServer(credentials, app);
+
+    server.listen(port, () => {
+        console.log(`Server is listening on port ${port}`);
+    });
+}
+else {
+    app.listen(port, () => {
+        console.log(`Server is listening on port ${port} with http`);
+    });
+}

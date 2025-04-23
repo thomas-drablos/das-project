@@ -33,17 +33,16 @@ router.post('/register', requireAuth, async (req: Request, res: Response) => {
 
     const preexisting = await User.exists({ auth0Id: sub }).exec();
 
-    // TODO: critical, fix /userinfo request
-
-    // Check if user info conflicts with user provided information
-    // const authResponse = await authUserInfo.getUserInfo(req.auth!.token);
-    // const userInfo = authResponse.data;
-    // if (name !== (userInfo.preferred_username || userInfo.nickname || userInfo.name) ||
-    //     email !== userInfo.email ||
-    //     sub !== userInfo.sub) {
-    //     res.status(400).send('Invalid user information');
-    //     return;
-    // }
+    // Check provided user information against signed info from access token
+    // We'll use the verified details from token as it's not untrusted user data
+    // Only purpose for the user provided data is sanity check: prevents a client bug thinking the name is different
+    const verifiedName = req.auth?.payload.appUsername;
+    const verifiedEmail = req.auth?.payload.appEmail;
+    if (!verifiedName || name !== verifiedName ||
+        !verifiedEmail || email !== verifiedEmail) {
+        res.status(400).send('Invalid user information');
+        return;
+    }
 
     let newUser = true;
     let userId: string;
@@ -57,8 +56,8 @@ router.post('/register', requireAuth, async (req: Request, res: Response) => {
         }
 
         const user = new User({
-            name,
-            email,
+            name: verifiedName,
+            email: verifiedEmail,
             auth0Id: sub,
             userId: uuid,
         });
