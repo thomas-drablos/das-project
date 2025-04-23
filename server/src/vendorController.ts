@@ -20,6 +20,64 @@ VendorController.get('/', async (req, res) => {
   }
 });
 
+VendorController.use(requireAuth);
+
+// GET /:id - get a vendor by ID 
+VendorController.get('/:id', async (req, res) => { 
+  try{
+    const vendor = await Vendor.findById(req.params.id);
+    const auth0Id = req.auth?.payload.sub;
+
+    if(!vendor){
+      res.status(404).json('Vendor not found.');
+      return;
+    }
+
+    //check auth0Id, user doesn't need to be logged in most cases
+      if(!auth0Id){ //not logged in, only access visible vendors
+        if(vendor.hidden){
+          res.status(403).json('Forbidden');
+          return;
+        }
+        //return visible vendor
+
+      } else { //if logged in 
+        const userObj = await User.findOne({ auth0Id });
+        if(!userObj){
+          res.status(404).json("I hope you never see this one");
+          return;
+        }
+        if(vendor.hidden){
+          if(userObj.isAdmin){
+            //show hidden vendor
+            res.json({
+              name: vendor.name,
+              photos: vendor.photos,
+              description: vendor.description,
+              tags: vendor.tags,
+              reviews: vendor.reviews
+            });
+
+          } else {
+            res.status(403).json("Forbidden");
+            return;
+          }
+        } else { //vendor is not hidden
+          res.json({
+            name: vendor.name,
+            photos: vendor.photos,
+            description: vendor.description,
+            tags: vendor.tags,
+            reviews: vendor.reviews
+          });
+        }
+      }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json("Failed to fetch vendor");
+  }
+});
+
 // GET /all - list all vendors (admin)
 VendorController.get('/all', async (req, res) => {
   try{
@@ -40,40 +98,6 @@ VendorController.get('/all', async (req, res) => {
     res.status(500).json("Failed to fetch vendors");
   }
 });
-
-// GET /:id - get a vendor by ID 
-VendorController.get('/:id', async (req, res) => { 
-  try{
-    const vendor = await Vendor.findById(req.params.id);
-    const auth0Id = req.auth?.payload.sub;
-
-    //find user
-    const userObj = await User.findOne({ auth0Id });
-    var isAdmin;
-    if(!userObj){ //not logged in, can still access but obv has no admin privileges
-      isAdmin = false;
-    } else {
-      isAdmin = userObj.isAdmin;
-    }
-
-    if (!vendor || (vendor.hidden && !isAdmin)){ 
-      res.status(404).json('Vendor not found.');
-      return;
-    } 
-    res.json({
-      name: vendor.name,
-      photos: vendor.photos,
-      description: vendor.description,
-      tags: vendor.tags,
-      reviews: vendor.reviews
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json("Failed to fetch vendor");
-  }
-});
-
-VendorController.use(requireAuth);
 
 // POST /create - create a new vendor
 VendorController.post('/create', requireAuth, async (req, res) => {
@@ -109,6 +133,10 @@ VendorController.post('/create', requireAuth, async (req, res) => {
     });
     await vendor.save();
 
+    //add to user 
+    userObj.vendorId = String(vendor._id);
+    await userObj.save();
+
     const returnVendor = await Vendor.findById(vendor._id)
     .populate({ path: 'user', select: '-_id name'})
     .select('user name photos description tags reviews hidden');
@@ -129,7 +157,7 @@ VendorController.patch('/:id/reviews', async (req, res) => {
     }
     const reviews = await Review.find({ vendor: vendor._id })
     .sort({time: -1})
-    .populate([{ path: 'user', select: '_id name'}, { path: 'vendor', select: 'name'}])
+    .populate([{ path: 'user', select: '-_id name'}, { path: 'vendor', select: 'name'}])
     .select('user vendor text rating time');
     res.json(reviews); //only selected fields
   } catch (err) {
