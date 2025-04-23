@@ -19,7 +19,7 @@ const User: React.FC = () => {
   const [profilePicUrl, setProfilePicUrl] = useState("");
 
   useEffect(() => {
-    if (userId == undefined || userId == null) return
+    if (userId == undefined || userId == null) return;
     getJson(`api/user/${userId}`, apiToken).then(setUserInfo);
   }, [loading, name]);
 
@@ -45,14 +45,16 @@ const User: React.FC = () => {
     const cleanUrl = DOMPurify.sanitize(profilePicUrl.trim());
     if (!cleanUrl) return;
 
-    postJson(
+    patchJson(
       `http://localhost:8000/api/user/${userId}/profile-pic`,
       { profilePic: cleanUrl },
       apiToken
-    );
-    setUserInfo({ ...userInfo, profilePic: cleanUrl });
-    setProfilePicUrl("");
-    setShowPhotoInput(false);
+    ).then(() => {
+      setUserInfo({ ...userInfo, profilePic: cleanUrl });
+      setProfilePicUrl("");
+      setShowModal(false); // Close the modal on successful save
+      setShowPhotoInput(false);
+    });
   };
 
   return (
@@ -133,7 +135,7 @@ const User: React.FC = () => {
                   Save Photo
                 </button>
                 <button
-                  className="btn btn-outline-danger"
+                  className="btn btn-danger" // Changed to btn-danger for filled red
                   onClick={() => {
                     setShowModal(false);
                     setProfilePicUrl("");
