@@ -18,6 +18,7 @@ const Inbox = () => {
 
   // getting the user and all conversation information
   useEffect(() => {
+    if (userId == undefined || userId == null) return
     getJson(`http://localhost:8000/api/user/${userId}`, apiToken).then(
       setUserInfo
     );
@@ -29,7 +30,7 @@ const Inbox = () => {
         console.error("Error fetching conversations:", error);
         // Optionally handle errors (e.g., display a message to the user)
       });
-  }, [loading, id, apiToken]);
+  }, [loading, id, apiToken, userId]);
 
   // clicking on the name should go to chat page
   const handlePersonClick = (conv: any) => {
