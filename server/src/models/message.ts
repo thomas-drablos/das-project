@@ -16,7 +16,7 @@ export const messageSchema = new Schema<IMessage>(
     vendor: { type: Schema.Types.ObjectId, ref: 'Vendor', required: true},
     time: { type: Date, default: Date.now },
     text: { type: String, required: true },
-    sender: { type: Schema.Types.ObjectId, ref: 'Sender', required: true},
+    sender: { type: String, default: "", required: true},
   },
   { timestamps: true }
 );
