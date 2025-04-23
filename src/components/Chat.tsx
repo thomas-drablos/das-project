@@ -23,6 +23,7 @@ const Chat = () => {
     setSelectedPerson(null);
     bottomChat.current?.scrollIntoView({ behavior: "instant" });
 
+    if (userId == undefined || userId == null) return
     getJson(`http://localhost:8000/api/user/${userId}`, apiToken)
       .then(setUserInfo)
       .catch((error) => {

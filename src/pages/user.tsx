@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useAppUser } from "../contexts/appUserContext";
 import { useApiToken } from "../contexts/apiTokenContext";
-import { getJson, postJson } from "../util";
+import { getJson, patchJson, postJson } from "../util";
 import { useNavigate } from "react-router-dom";
 import DOMPurify from "dompurify"; // Import DOMPurify
 
@@ -29,8 +29,9 @@ const User: React.FC = () => {
         `http://localhost:8000/api/vendor/create`,
         { name: userInfo.name },
         apiToken
-      );
-      window.location.reload();
+      ).then((vendor) => {
+        navigate(`/vendor/${vendor._id}`);
+      })
     } else if (typeof userInfo === "object") {
       navigate(`/vendor/${userInfo.vendorId}`);
     }
@@ -101,7 +102,7 @@ const User: React.FC = () => {
               onChange={(e) => setNewName(e.target.value)}
               onBlur={() => {
                 const sanitizedNewName = DOMPurify.sanitize(newName); // Sanitize before sending
-                const response = postJson(
+                const response = patchJson(
                   `http://localhost:8000/api/user/${userId}/name`,
                   { name: sanitizedNewName },
                   apiToken
