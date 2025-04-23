@@ -19,6 +19,7 @@ const User: React.FC = () => {
   const [profilePicUrl, setProfilePicUrl] = useState("");
 
   useEffect(() => {
+    if (userId == undefined || userId == null) return
     getJson(`api/user/${userId}`, apiToken).then(setUserInfo);
   }, [loading, name]);
 

@@ -235,7 +235,15 @@ VendorController.patch('/:id/photos/add', requireAuth, async (req, res) => {
     const url = req.body;
     const id = req.params.id;
 
-    //input validation
+    //input validation - appropriate length, type, etc.
+    if (
+      !url ||
+      typeof url !== 'string' ||  
+      !(url.startsWith('https://'))
+    ) {
+      res.status(400).json("Invalid image URL.");
+      return
+    }
 
     //get vendor
     const vendorObj = await Vendor.findById(id)
@@ -271,6 +279,13 @@ VendorController.patch('/:id/photos/delete', requireAuth, async (req, res) => {
     const id = req.params.id;
 
     //input validation
+    if (
+      !index ||
+      typeof index !== 'number'
+    ) {
+      res.status(400).json("Invalid image index.");
+      return;
+    }
 
     //get vendor
     const vendorObj = await Vendor.findById(id)
@@ -303,13 +318,13 @@ VendorController.patch('/:id/description', requireAuth, async (req, res) => {
   const auth0Id = req.auth?.payload.sub;
   const inputId = req.params.id;
 
-  //get requesting user
-  const userObj = await User.findOne({ auth0Id });
-  const requestingUserId = userObj?._id;
+    //get requesting user
+    const userObj = await User.findOne({ auth0Id });
+    const requestingUserId = userObj?._id;
 
-  //find vendor to be updated 
-  const vendorObj = await Vendor.findOne({ inputId });
-  const vendorUserId = vendorObj?.user;
+    //find vendor to be updated 
+    const vendorObj = await Vendor.findOne({ inputId });
+    const vendorUserId = vendorObj?.user;
 
   //confirm user is either admin or the vendor themselves
   if (userObj == null || (userObj.isAdmin = false && vendorUserId != requestingUserId)) { //allowing admin to change name as well
@@ -385,6 +400,13 @@ VendorController.patch('/:id/tags/delete', requireAuth, async (req, res) => {
     const id = req.params.id;
 
     //input validation
+    if (
+      !index ||
+      typeof index !== 'number'
+    ) {
+      res.status(400).json("Invalid tag index.");
+      return;
+    }
 
     //get vendor
     const vendorObj = await Vendor.findById(id)
