@@ -14,6 +14,9 @@ const User: React.FC = () => {
   const [userInfo, setUserInfo] = useState<any>();
   const [editName, setEditName] = useState<boolean>(false);
   const [newName, setNewName] = useState<string>(name || "");
+  const [, setShowPhotoInput] = useState<boolean>(false);
+  const [showModal, setShowModal] = useState(false);
+  const [profilePicUrl, setProfilePicUrl] = useState("");
 
   useEffect(() => {
     getJson(`api/user/${userId}`, apiToken).then(setUserInfo);
@@ -32,9 +35,23 @@ const User: React.FC = () => {
       ).then((vendor: any) => {
         navigate(`/vendor/${vendor._id}`);
       });
-    } else if (typeof userInfo === "object") {
+    } else if (typeof userInfo === "object" && userInfo.vendorId) {
       navigate(`/vendor/${userInfo.vendorId}`);
     }
+  };
+
+  const handleProfilePicSave = () => {
+    const cleanUrl = DOMPurify.sanitize(profilePicUrl.trim());
+    if (!cleanUrl) return;
+
+    postJson(
+      `http://localhost:8000/api/user/${userId}/profile-pic`,
+      { profilePic: cleanUrl },
+      apiToken
+    );
+    setUserInfo({ ...userInfo, profilePic: cleanUrl });
+    setProfilePicUrl("");
+    setShowPhotoInput(false);
   };
 
   return (
@@ -59,43 +76,74 @@ const User: React.FC = () => {
               objectFit: "cover",
               border: "2px solid #ccc",
               marginBottom: "10px",
+              cursor: "pointer",
             }}
+            title="Click to update your profile picture"
+            onClick={() => setShowModal(true)}
           />
-          <br />
-          <input
-            type="file"
-            accept="image/*"
-            style={{ display: "none" }}
-            id="profileUpload"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) {
-                const sanitizeFilenameForURL = (filename: any) => {
-                  // Allow only alphanumeric, hyphens, underscores, and periods
-                  return filename.replace(/[^a-zA-Z0-9._-]/g, "");
-                };
-
-                const sanitizedFilename = sanitizeFilenameForURL(file.name);
-                const fakeUrl = `../../public/images/${encodeURIComponent(
-                  sanitizedFilename
-                )}`; // URL-encode the filename
-
-                postJson(
-                  `http://localhost:8000/api/user/${userId}/profile-pic`,
-                  { profilePic: fakeUrl },
-                  apiToken
-                );
-                setUserInfo({ ...userInfo, profilePic: fakeUrl });
-              }
-            }}
-          />
-          <button
-            className="btn btn-outline-primary btn-sm"
-            onClick={() => document.getElementById("profileUpload")?.click()}
-          >
-            Change Photo
-          </button>
         </div>
+
+        {/* Modal */}
+        {showModal && (
+          <div
+            style={{
+              backgroundColor: "rgba(0,0,0,0.6)",
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 1000,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <div
+              style={{
+                background: "#fff",
+                padding: "25px",
+                borderRadius: "10px",
+                width: "90%",
+                maxWidth: "400px",
+                textAlign: "center",
+                boxShadow: "0 0 10px rgba(0,0,0,0.3)",
+              }}
+            >
+              <p style={{ fontWeight: "bold", fontSize: "1rem" }}>
+                Do you have the image URL?
+                <br />
+                If not, you can use <strong>IMGBB</strong> to get one.
+              </p>
+
+              <input
+                type="text"
+                placeholder="Paste image URL here..."
+                className="form-control mb-3"
+                value={profilePicUrl}
+                onChange={(e) => setProfilePicUrl(e.target.value)}
+              />
+
+              <div className="d-flex justify-content-center gap-2">
+                <button
+                  className="btn btn-success"
+                  onClick={handleProfilePicSave}
+                >
+                  Save Photo
+                </button>
+                <button
+                  className="btn btn-outline-danger"
+                  onClick={() => {
+                    setShowModal(false);
+                    setProfilePicUrl("");
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Editable Name */}
         <div
@@ -111,15 +159,13 @@ const User: React.FC = () => {
               onChange={(e) => setNewName(e.target.value)}
               onBlur={() => {
                 const sanitizedNewName = DOMPurify.sanitize(newName); // Sanitize before sending
-                const response = patchJson(
+                patchJson(
                   `http://localhost:8000/api/user/${userId}/name`,
                   { name: sanitizedNewName },
                   apiToken
-                );
-                response.then((result) =>
-                  console.log("try to change name:", result)
-                );
-                setUserInfo({ ...userInfo, name: sanitizedNewName });
+                ).then(() => {
+                  setUserInfo({ ...userInfo, name: sanitizedNewName });
+                });
                 setEditName(false);
               }}
               autoFocus
@@ -143,7 +189,11 @@ const User: React.FC = () => {
         {/* Vendor Link */}
         <br />
         {!userInfo.isAdmin ? (
-          <button onClick={handleVendor}>Vendor Page</button>
+          <button className="btn btn-success" onClick={handleVendor}>
+            {userInfo.vendorId == null
+              ? "Create Vendor Page"
+              : "Edit Vendor Page"}
+          </button>
         ) : (
           <></>
         )}
