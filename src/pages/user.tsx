@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useAppUser } from "../contexts/appUserContext";
 import { useApiToken } from "../contexts/apiTokenContext";
-import { getJson, postJson } from "../util";
+import { getJson, patchJson, postJson } from "../util";
 import { useNavigate } from "react-router-dom";
 
 const User: React.FC = () => {
@@ -24,8 +24,9 @@ const User: React.FC = () => {
 
   const handleVendor = async () => {
     if (typeof userInfo === "object" && userInfo.vendorId == null) {
-      await postJson(`http://localhost:8000/api/vendor/create`, { name: userInfo.name }, apiToken);
-      window.location.reload();
+      await postJson(`http://localhost:8000/api/vendor/create`, { name: userInfo.name }, apiToken).then((page:any) => {
+        navigate(`/vendor/${page._id}`)
+      })
     } else if (typeof userInfo === "object") {
       navigate(`/vendor/${userInfo.vendorId}`);
     }
@@ -86,7 +87,7 @@ const User: React.FC = () => {
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               onBlur={() => {
-                const response = postJson(`http://localhost:8000/api/user/${userId}/name`, { name: newName }, apiToken);
+                const response = patchJson(`http://localhost:8000/api/user/${userId}/name`, { name: newName }, apiToken);
                 response.then((result) => console.log("try to change name:", result));
                 setUserInfo({ ...userInfo, name: newName });
                 setEditName(false);
