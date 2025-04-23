@@ -51,7 +51,7 @@ UserController.patch('/name', async (req: Request, res: Response) => {
           res.status(500).json();
           return;
         }
-        const newName = req.query.name as string|undefined;
+        const newName = req.body.name as string|undefined;
         if (newName === undefined) {
           res.status(400).json('Must specify name in query parameter');
           return;

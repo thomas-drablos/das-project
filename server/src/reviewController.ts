@@ -107,6 +107,7 @@ ReviewController.post('/create', async (req, res) => {
     const review = await Review.create({
       user: userObj._id,
       vendor: vendorObj._id,
+      name: userObj.name,
       text,
       rating,
       time: new Date()
@@ -130,9 +131,10 @@ ReviewController.post('/create', async (req, res) => {
 });
 
 // PATCH /:id/hide - toggle hidden status
-ReviewController.patch('/:id/hide', async (req, res) => {
+ReviewController.patch('/:id/hide/:index', async (req, res) => {
   try{
     const review = await Review.findById(req.params.id);
+    const reviewIndex = req.params.index;
     if (!review){ 
       res.status(404).json('Review not found');
       return;

@@ -11,7 +11,7 @@ VendorController.get('/', async (req, res) => {
   try{
     const vendors = await Vendor.find({ hidden: false })
     .populate({ path: 'user', select: '-_id name'})
-    .select('user.name name photos description tags reviews hidden');
+    .select('user name photos description tags reviews hidden');
   
     res.json(vendors); //only selected fields
   } catch (err) {
@@ -192,7 +192,8 @@ VendorController.patch('/:id/photos/add', requireAuth, async (req, res) => {
     //input validation
 
     //get vendor
-    const vendorObj = await Vendor.findById(id);
+    const vendorObj = await Vendor.findById(id)
+    .populate({ path: 'user', select: '-_id name auth0Id'});
     if(!vendorObj){
       res.status(404).json("Failed to fetch vendor");
       return;
@@ -226,7 +227,8 @@ VendorController.patch('/:id/photos/delete', requireAuth, async (req, res) => {
     //input validation
 
     //get vendor
-    const vendorObj = await Vendor.findById(id);
+    const vendorObj = await Vendor.findById(id)
+    .populate({ path: 'user', select: '-_id name auth0Id'});
     if(!vendorObj){
       res.status(404).json("Failed to fetch vendor");
       return;
@@ -301,7 +303,8 @@ VendorController.patch('/:id/tags/add', requireAuth, async(req, res) => {
     //input validation 
 
     //get vendor
-    const vendorObj = await Vendor.findById(id);
+    const vendorObj = await Vendor.findById(id)
+    .populate({ path: 'user', select: '-_id name auth0Id'});
     if(!vendorObj){
       res.status(404).json("Failed to fetch vendor");
       return;
@@ -334,7 +337,8 @@ VendorController.patch('/:id/tags/delete', requireAuth, async(req, res) => {
     //input validation
 
     //get vendor
-    const vendorObj = await Vendor.findById(id);
+    const vendorObj = await Vendor.findById(id)
+    .populate({ path: 'user', select: '-_id name auth0Id'});
     if(!vendorObj){
       res.status(404).json("Failed to fetch vendor");
       return;
