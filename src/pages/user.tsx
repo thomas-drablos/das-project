@@ -72,7 +72,7 @@ const User: React.FC = () => {
                 const fakeUrl = `../../public/images/${file.name}`; // Simulate image path
                 postJson(
                   `http://localhost:8000/api/user/${userId}/profile-pic`,
-                  { profilePic: fakeUrl },
+                  { profilePic: fakeUrl},
                   apiToken
                 );
                 setUserInfo({ ...userInfo, profilePic: fakeUrl });

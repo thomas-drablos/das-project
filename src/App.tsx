@@ -4,7 +4,7 @@ import NavBar from "./components/Navbar";
 import Results from "./pages/results";
 import LandingPage from "./pages/landing";
 import User from "./pages/user";
-import VendorPage from "./pages/vendor"; 
+import VendorPage from "./pages/vendor";
 import Messaging from "./pages/messaging";
 import AdminDashboard from "./pages/adminDash";
 
@@ -32,9 +32,9 @@ function App() {
                 <Route path="/results/:query" element={<Results />} />
                 <Route path="/search" element={<SearchBar />} />
                 <Route path="/profile" element={<User />} />
-                <Route path="/admin" element={<AdminDashboard/>} />
-                <Route path="/dms" element={<Messaging />} /> 
-                <Route path="/dms/:id" element={<Messaging/>} />
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/dms" element={<Messaging />} />
+                <Route path="/dms/:id" element={<Messaging />} />
                 <Route path="/vendor/:id" element={<VendorPage />} />
               </Routes>
             </div>
