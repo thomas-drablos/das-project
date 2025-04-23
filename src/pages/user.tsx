@@ -16,6 +16,7 @@ const User: React.FC = () => {
   const [newName, setNewName] = useState<string>(name || "");
 
   useEffect(() => {
+    if (userId == undefined || userId == null) return
     getJson(`api/user/${userId}`, apiToken).then(setUserInfo);
   }, [loading, name]);
 
