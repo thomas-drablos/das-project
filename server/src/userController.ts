@@ -75,4 +75,62 @@ UserController.patch('/name', async (req: Request, res: Response) => {
     }
 });
 
+// PATCH /:id/profile-pic - add or update profile picture
+UserController.patch('/:id/profile-pic', requireAuth, async (req, res) => {
+    try {
+      const profilePic = req.body;
+      const id = req.params.id;
+  
+      // Get user
+      const userObj = await User.findOne({ userId: id });
+      if (!userObj) {
+        return res.status(404).json("User not found");
+      }
+  
+      // Check permissions
+      const auth0Id = req.auth?.payload.sub;
+      if (userObj.auth0Id !== auth0Id && !userObj.isAdmin) {
+        return res.status(403).json("Forbidden");
+      }
+  
+      // Update profilePic
+      userObj.profilePic = profilePic;
+      await userObj.save();
+  
+      res.status(200).json("Successfully set profile picture");
+    } catch (err) {
+      console.error(err);
+      res.status(500).json("Failed to set profile picture");
+    }
+});
+
+// PATCH /:id/profile-pic/delete - delete profile picture
+UserController.patch('/:id/profile-pic/delete', requireAuth, async (req, res) => {
+    try {
+      const id = req.params.id;
+  
+      // Get user
+      const userObj = await User.findOne({ userId: id });
+      if (!userObj) {
+        return res.status(404).json("User not found");
+      }
+  
+      // Check permissions
+      const auth0Id = req.auth?.payload.sub;
+      if (userObj.auth0Id !== auth0Id && !userObj.isAdmin) {
+        return res.status(403).json("Forbidden");
+      }
+  
+      // Delete profilePic
+      userObj.profilePic = "";
+      await userObj.save();
+  
+      res.status(200).json("Successfully deleted profile picture");
+    } catch (err) {
+      console.error(err);
+      res.status(500).json("Failed to delete profile picture");
+    }
+});
+  
+
 export default UserController;

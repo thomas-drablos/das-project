@@ -303,13 +303,13 @@ VendorController.patch('/:id/description', requireAuth, async (req, res) => {
   const auth0Id = req.auth?.payload.sub;
   const inputId = req.params.id;
 
-  //get requesting user
-  const userObj = await User.findOne({ auth0Id });
-  const requestingUserId = userObj?._id;
+    //get requesting user
+    const userObj = await User.findOne({ auth0Id });
+    const requestingUserId = userObj?._id;
 
-  //find vendor to be updated 
-  const vendorObj = await Vendor.findOne({ inputId });
-  const vendorUserId = vendorObj?.user;
+    //find vendor to be updated 
+    const vendorObj = await Vendor.findOne({ inputId });
+    const vendorUserId = vendorObj?.user;
 
   //confirm user is either admin or the vendor themselves
   if (userObj == null || (userObj.isAdmin = false && vendorUserId != requestingUserId)) { //allowing admin to change name as well
