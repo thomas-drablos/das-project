@@ -64,7 +64,7 @@ UserController.get('/all', async (req, res) => {
 
     //do not return db id, select attributes
     const users = await User.find()
-      .select('name email profilePic');
+      .select('name email profilePic hidden vendorId');
 
     res.json(users);
   } catch (err) {
@@ -166,20 +166,20 @@ UserController.patch('/:id/profile-pic/delete', requireAuth, async (req, res) =>
 });
 
 // PATCH /hide - toggle hidden status
-UserController.patch('/hide', async (req, res) => {
+UserController.patch('/:userId/hide', async (req, res) => {
   try {
-    const auth0Id = req.auth?.payload.sub;
+    const hideUser = req.params.userId
     //get user
-    const user = await User.findById({ auth0Id });
+    const user: any = await User.findById({_id: hideUser});
     if (!user) {
       res.status(404).json("User not found");
       return;
     }
 
     //change hidden
-    user.hidden = !user.hidden;
-    await user.save();
-    res.status(200).json("Successfully toggled user's hidden status");
+    user.hidden = !user.hidden
+    await user.save()
+    res.status(200).json("Successfully toggled user's hidden status")
   } catch (err) {
     console.error(err);
     res.status(500).json("Failed to toggle user's hidden status");
