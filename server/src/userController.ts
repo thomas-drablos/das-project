@@ -6,26 +6,33 @@ import { auth } from "express-oauth2-jwt-bearer";
 const UserController: Router = Router({ mergeParams: true });
 
 const enforceSameUser = async (req: Request, res: Response, next: NextFunction) => {
-  if (!req.auth) {
-    throw new Error('Unauthorized');
-  }
+  try {
+    if (!req.auth) {
+      res.status(403).json("Forbidden");
+      return;
+    }
 
-  const targetId = req.params.id;
-  const user = await User.findOne({ auth0Id: req.auth.payload.sub }, '-auth0Id');
-  if (user === null || user.userId !== targetId) {
-    throw new Error('Unauthorized');
-  }
+    const targetId = req.params.id;
+    const user = await User.findOne({ auth0Id: req.auth.payload.sub }, '-auth0Id');
+    if (user === null || user.userId !== targetId) {
+      res.status(403).json("Forbidden");
+      return;
+    }
 
-  req.userInfo = {
-    id: user.userId,
-    name: user.name,
-    email: user.email,
-    isAdmin: user.isAdmin,
-    vendorId: user.vendorId,
-    profilePic: user.profilePic,
-    hidden: user.hidden
-  };
-  next();
+    req.userInfo = {
+      id: user.userId,
+      name: user.name,
+      email: user.email,
+      isAdmin: user.isAdmin,
+      vendorId: user.vendorId,
+      profilePic: user.profilePic,
+      hidden: user.hidden
+    };
+    next();
+  } catch (err) {
+    console.log(`Error in /userinfo: {$err}`);
+    console.log(err);
+    res.status(500).json({ error: 'Internal server error' });  }
 }
 
 UserController.use(requireAuth);
@@ -47,9 +54,9 @@ UserController.get('/', (req: Request, res: Response) => { //check permissions??
 
     res.json(req.userInfo);
   } catch (err) {
+    console.log(`Failed to fetch user info: {$err}`);
     console.error(err);
-    res.status(500).json("Failed to fetch user info");
-  }
+    res.status(500).json({ error: 'Internal server error' });  }
 });
 
 //GET /all - get all users (admin)
@@ -68,9 +75,9 @@ UserController.get('/all', async (req, res) => {
 
     res.json(users);
   } catch (err) {
+    console.log(`Failed to fetch user info: {$err}`);
     console.error(err);
-    res.status(500).json("Failed to fetch user info");
-  }
+    res.status(500).json({ error: 'Internal server error' });  }
 });
 
 // PATCH /name - set user name
@@ -99,9 +106,9 @@ UserController.patch('/name', async (req: Request, res: Response) => {
     await User.updateOne({ userId: req.userInfo.id }, { name: newName });
     res.status(200).json('Successfully created name');
   } catch (err) {
+    console.log(`Failed to set user name: {$err}`);
     console.error(err);
-    res.status(500).json('Failed to create user name');
-  }
+    res.status(500).json({ error: 'Internal server error' });  }
 });
 
 // PATCH /:id/profile-pic - add or update profile picture
@@ -130,9 +137,9 @@ UserController.patch('/:id/profile-pic', requireAuth, async (req, res) => {
 
     res.status(200).json("Successfully set profile picture");
   } catch (err) {
+    console.log(`Failed to set profile picture: {$err}`);
     console.error(err);
-    res.status(500).json("Failed to set profile picture");
-  }
+    res.status(500).json({ error: 'Internal server error' });  }
 });
 
 // PATCH /:id/profile-pic/delete - delete profile picture
@@ -160,9 +167,9 @@ UserController.patch('/:id/profile-pic/delete', requireAuth, async (req, res) =>
 
     res.status(200).json("Successfully deleted profile picture");
   } catch (err) {
+    console.log(`Failed to delete profile picture: {$err}`);
     console.error(err);
-    res.status(500).json("Failed to delete profile picture");
-  }
+    res.status(500).json({ error: 'Internal server error' });  }
 });
 
 // PATCH /hide - toggle hidden status
@@ -181,9 +188,9 @@ UserController.patch('/:userId/hide', async (req, res) => {
     await user.save()
     res.status(200).json("Successfully toggled user's hidden status")
   } catch (err) {
+    console.log(`Failed to toggle user's hidden status: {$err}`);
     console.error(err);
-    res.status(500).json("Failed to toggle user's hidden status");
-  }
+    res.status(500).json({ error: 'Internal server error' });  }
 })
 
 export default UserController;
