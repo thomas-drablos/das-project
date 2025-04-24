@@ -10,12 +10,18 @@ import "./AllVendors.css"; // Import a CSS file for this component
 const AllVendors = () => {
   const { loading, userId } = useAppUser();
   const { apiToken } = useApiToken();
-  const [all, setAll] = useState<any>();
+  const [all, setAll] = useState<any[]>([]); // Initialize as an empty array
   const [userInfo, setUserInfo] = useState<any>();
   const navigate = useNavigate();
 
   useEffect(() => {
-    getJson(`http://localhost:8000/api/vendor/`).then(setAll);
+    getJson(`http://localhost:8000/api/vendor/`).then((data) => {
+      if (Array.isArray(data)) {
+        setAll(
+          data.filter((vendor) => vendor.photos && vendor.photos.length > 0)
+        );
+      }
+    });
   }, []);
 
   useEffect(() => {
@@ -33,7 +39,13 @@ const AllVendors = () => {
       apiToken != undefined
     ) {
       getJson(`http://localhost:8000/api/vendor/${userId}/all`, apiToken).then(
-        setAll
+        (data) => {
+          if (Array.isArray(data)) {
+            setAll(
+              data.filter((vendor) => vendor.photos && vendor.photos.length > 0)
+            );
+          }
+        }
       );
     }
   }, [userInfo]);
