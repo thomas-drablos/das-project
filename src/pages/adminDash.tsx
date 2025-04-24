@@ -11,7 +11,7 @@ const AdminDashboard: React.FC = () => {
   const { loading, userId } = useAppUser();
   const { apiToken } = useApiToken();
   const [vendors, setVendors] = useState<any>();
-  const [users, setUsers] = useState<any>()
+  const [users, setUsers] = useState<any>();
   const [userInfo, setUserInfo] = useState<any>();
 
   useEffect(() => {
@@ -52,8 +52,8 @@ const AdminDashboard: React.FC = () => {
         `http://localhost:8000/api/vendor/${vendors[index]._id}/hide`,
         {},
         apiToken
-      ).then(() => setVendors(updatedVendors))
-    } 
+      ).then(() => setVendors(updatedVendors));
+    }
     // hiding the user
     else {
       let isHidden = users[index].hidden;
@@ -64,17 +64,22 @@ const AdminDashboard: React.FC = () => {
         {},
         apiToken
       ).then(() => {
-        setUsers(updatedUsers)
+        setUsers(updatedUsers);
 
         // OPTIONAL: if user is hidden also hide their vendor page if not already hidden
-        if (updatedUsers[index].vendorId != null && updatedUsers[index].hidden == true) {
-          const vendorPage = vendors.find(vendor => vendor._id == users[index].vendorId)
-          const idx = vendors.indexOf(vendorPage)
+        if (
+          updatedUsers[index].vendorId != null &&
+          updatedUsers[index].hidden == true
+        ) {
+          const vendorPage = vendors.find(
+            (vendor: { _id: any }) => vendor._id == users[index].vendorId
+          );
+          const idx = vendors.indexOf(vendorPage);
           if (vendorPage.hidden == false) {
-            toggleVisibility("vendor", idx)
+            toggleVisibility("vendor", idx);
           }
         }
-      })
+      });
     }
   };
 
@@ -104,8 +109,9 @@ const AdminDashboard: React.FC = () => {
             {users?.map((user: any, idx: number) => (
               <li
                 key={user.id}
-                className={`list-group-item d-flex justify-content-between align-items-center ${user.hidden ? "bg-light text-muted" : ""
-                  }`}
+                className={`list-group-item d-flex justify-content-between align-items-center ${
+                  user.hidden ? "bg-light text-muted" : ""
+                }`}
                 style={{
                   opacity: user.hidden ? 0.6 : 1,
                   fontStyle: user.hidden ? "italic" : "normal",
@@ -126,8 +132,9 @@ const AdminDashboard: React.FC = () => {
                   – <em>{user.email}</em>
                 </span>
                 <button
-                  className={`btn btn-sm ${user.hidden ? "btn-secondary" : "btn-warning"
-                    }`}
+                  className={`btn btn-sm ${
+                    user.hidden ? "btn-secondary" : "btn-warning"
+                  }`}
                   onClick={() => toggleVisibility("user", idx)}
                 >
                   {user.hidden ? "Unhide" : "Hide"}
@@ -165,8 +172,9 @@ const AdminDashboard: React.FC = () => {
                   />
                 </span>
                 <button
-                  className={`btn btn-sm ${vendor.hidden ? "btn-secondary" : "btn-warning"
-                    }`}
+                  className={`btn btn-sm ${
+                    vendor.hidden ? "btn-secondary" : "btn-warning"
+                  }`}
                   onClick={() => toggleVisibility("vendor", index)}
                 >
                   {vendor.hidden ? "Unhide" : "Hide"}

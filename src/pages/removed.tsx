@@ -14,7 +14,7 @@ const RemovedPage: React.FC = () => {
         padding: "20px",
       }}
     >
-      <h1 style={{ fontSize: "4em", marginBottom: "10px", color: "#e87500" }}>
+      <h1 style={{ fontSize: "4em", marginBottom: "20px", color: "#e87500" }}>
         Oops!
       </h1>
       <p style={{ fontSize: "1.5em", marginBottom: "20px" }}>
