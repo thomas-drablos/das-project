@@ -8,11 +8,11 @@ const VendorController: Router = Router({ mergeParams: true });
 
 // GET / - list all visible vendors
 VendorController.get('/', async (req, res) => {
-  try{
+  try {
     const vendors = await Vendor.find({ hidden: false })
-    .populate({ path: 'user', select: '-_id name'})
-    .select('user name photos description tags reviews hidden');
-  
+      .populate({ path: 'user', select: '-_id name' })
+      .select('user name photos description tags reviews hidden');
+
     res.json(vendors); //only selected fields
   } catch (err) {
     console.error(err);
@@ -20,87 +20,99 @@ VendorController.get('/', async (req, res) => {
   }
 });
 
-VendorController.use(requireAuth);
-
 // GET /:id - get a vendor by ID 
-VendorController.get('/:id', async (req, res) => { 
-  try{
-    const vendor = await Vendor.findById(req.params.id);
-    const auth0Id = req.auth?.payload.sub;
+VendorController.get('/:id', async (req, res) => {
+  const vendor = await Vendor.findById(req.params.id);
 
-    if(!vendor){
-      res.status(404).json('Vendor not found.');
-      return;
-    }
-
-    //check auth0Id, user doesn't need to be logged in most cases
-      if(!auth0Id){ //not logged in, only access visible vendors
-        if(vendor.hidden){
-          res.status(403).json('Forbidden');
-          return;
-        }
-        //return visible vendor
-        res.json({
-          name: vendor.name,
-          photos: vendor.photos,
-          description: vendor.description,
-          tags: vendor.tags,
-          reviews: vendor.reviews
-        });
-
-      } else { //if logged in 
-        const userObj = await User.findOne({ auth0Id });
-        if(!userObj){
-          res.status(404).json("I hope you never see this one");
-          return;
-        }
-        if(vendor.hidden){
-          if(userObj.isAdmin){
-            //show hidden vendor
-            res.json({
-              name: vendor.name,
-              photos: vendor.photos,
-              description: vendor.description,
-              tags: vendor.tags,
-              reviews: vendor.reviews
-            });
-
-          } else {
-            res.status(403).json("Forbidden");
-            return;
-          }
-        } else { //vendor is not hidden
-          res.json({
-            name: vendor.name,
-            photos: vendor.photos,
-            description: vendor.description,
-            tags: vendor.tags,
-            reviews: vendor.reviews
-          });
-        }
-      }
-  } catch (err) {
-    console.error(err);
-    res.status(500).json("Failed to fetch vendor");
-  }
+  if (vendor == null) return
+  res.json({
+    name: vendor.name,
+    photos: vendor.photos,
+    description: vendor.description,
+    tags: vendor.tags,
+    reviews: vendor.reviews
+  });
 });
 
+// GET /suggestions/:query/:type - list all visible vendors based on query and type (all/name/tags categories)
+VendorController.get('/suggestions/:query/:type', async (req, res) => {
+  const query = req.params.query.trim()
+  const type = req.params.type
+
+  if (!query || !type || typeof (query) != 'string' || typeof (type) != 'string') {
+    res.status(400).json('Query and type are required and must be a string.')
+  }
+
+  try {
+    let results = new Set()
+    if (type == 'name' || type == 'all') {
+      const nameResults = await Vendor.find({ name: { $regex: query, $options: 'i' }, hidden: false }).select('name')
+      nameResults.forEach(result => results.add(result.name))
+    }
+    if (type == 'tags' || type == 'all') {
+      const lastTag = query.split(" ").pop() || ""
+      const tagResults = await Vendor.find({ tags: { $elemMatch: { $regex: lastTag, $options: 'i' } }, hidden: false }).select('tags')
+      tagResults.forEach(result => {
+        result.tags.forEach(tag => {
+          if (tag.toLowerCase().includes(lastTag.toLowerCase())) {
+            results.add(tag)
+          }
+        }
+        )
+      })
+    }
+    res.json(Array.from(results))
+  }
+  catch (error) {
+    res.status(500).json({ error: 'Server error' })
+  }
+})
+
+// GET /results/:query - list all visible vendors based on query
+VendorController.get('/results/:query', async (req, res) => {
+  const query = req.params.query.trim()
+  if (typeof (query) != 'string') {
+    res.status(400).json('Query is required and must be a string')
+  }
+
+  try {
+    const parts = query.split(' ').filter(Boolean)
+    const tagFilter = parts.map(word => ({ tags: { $regex: word, $options: 'i' } }))
+    const vendors = await Vendor.find({
+      hidden: false,
+      $or: [
+        { name: { $regex: query, $options: 'i' } },
+        { $and: tagFilter }
+      ]
+    }).select('name tags description')
+    if (vendors == null) {
+      res.json(null)
+    }
+    res.json(vendors)
+  }
+  catch (error) {
+    res.status(500).json('Server Error')
+  }
+})
+
+VendorController.use(requireAuth);
+
 // GET /all - list all vendors (admin)
-VendorController.get('/all', async (req, res) => {
-  try{
+VendorController.get('/:id/all', async (req, res) => {
+  try {
     const auth0Id = req.auth?.payload.sub;
     //find user object
     const userObj = await User.findOne({ auth0Id });
 
-    if(!userObj || !userObj.isAdmin){
+    if (!userObj || !userObj.isAdmin) {
       res.status(403).json("Forbidden");
       return;
     }
     const vendors = await Vendor.find()
-    .populate({ path: 'user', select: '-_id name'}) //ensures db id is secure
-    .select('user name photos description tags reviews hidden');
+      .populate({ path: 'user', select: '-_id name' }) //ensures db id is secure
+      .select('user name photos description tags reviews hidden');
     res.json(vendors); //only selected fields
-  } catch (err){
+  } catch (err) {
     console.error(err);
     res.status(500).json("Failed to fetch vendors");
   }
@@ -108,11 +120,11 @@ VendorController.get('/all', async (req, res) => {
 
 // POST /create - create a new vendor
 VendorController.post('/create', requireAuth, async (req, res) => {
-  try{
+  try {
     //make sure they have a user account + are logged in
     const auth0Id = req.auth?.payload.sub;
     const userObj = await User.findOne({ auth0Id });
-    if(!userObj){
+    if (!userObj) {
       res.status(401).json("Must be logged in to open a storefront.");
       return;
     }
@@ -120,7 +132,7 @@ VendorController.post('/create', requireAuth, async (req, res) => {
 
     //make sure they do not already have a vendor account
     const vendorObj = await Vendor.findOne({ user: userObj })
-    if(vendorObj){
+    if (vendorObj) {
       res.status(403).json('User already has a vendor page.');
       return;
     }
@@ -129,7 +141,7 @@ VendorController.post('/create', requireAuth, async (req, res) => {
       res.status(400).json('Name is required.');
       return;
     }
-      const vendor = await Vendor.create({
+    const vendor = await Vendor.create({
       user: userObj,
       name,
       photos: photos || [],
@@ -140,15 +152,14 @@ VendorController.post('/create', requireAuth, async (req, res) => {
     });
     await vendor.save();
 
-    //add to user 
-    userObj.vendorId = String(vendor._id);
-    await userObj.save();
+    // Update User table w/ vendor ID
+    await User.updateOne({ _id: userObj._id }, { vendorId: vendor._id });
 
     const returnVendor = await Vendor.findById(vendor._id)
-    .populate({ path: 'user', select: '-_id name'})
-    .select('user name photos description tags reviews hidden');
+      .populate({ path: 'user', select: '-_id name' })
+      .select('user name photos description tags reviews hidden');
     res.status(201).json(returnVendor);
-  } catch (err){
+  } catch (err) {
     console.error(err);
     res.status(500).json("Failed to create vendor");
   }
@@ -156,16 +167,16 @@ VendorController.post('/create', requireAuth, async (req, res) => {
 
 //GET /:id/reviews - get all reviews for a vendor
 VendorController.patch('/:id/reviews', async (req, res) => {
-  try{
+  try {
     const vendor = await Vendor.findById(req.params.id);
-    if (!vendor){
+    if (!vendor) {
       res.status(404).json("Vendor not found.");
       return;
     }
     const reviews = await Review.find({ vendor: vendor._id })
-    .sort({time: -1})
-    .populate([{ path: 'user', select: '-_id name'}, { path: 'vendor', select: 'name'}])
-    .select('user vendor text rating time');
+      .sort({ time: -1 })
+      .populate([{ path: 'user', select: '_id name' }, { path: 'vendor', select: 'name' }])
+      .select('user vendor text rating time');
     res.json(reviews); //only selected fields
   } catch (err) {
     console.error(err);
@@ -175,8 +186,8 @@ VendorController.patch('/:id/reviews', async (req, res) => {
 
 // PATCH /:id - update vendor details TODO: for all patch/:id, more input checking 
 // PATCH /:id/name - update vendor name
-VendorController.patch('/:id/name', requireAuth, async (req, res) => { 
-  try{
+VendorController.patch('/:id/name', requireAuth, async (req, res) => {
+  try {
     const auth0Id = req.auth?.payload.sub;
     const inputId = req.params.id;
 
@@ -189,29 +200,29 @@ VendorController.patch('/:id/name', requireAuth, async (req, res) => {
     const vendorUserId = vendorObj?.user;
 
     //confirm user is either admin or the vendor themselves
-    if(!userObj || (!userObj.isAdmin && vendorUserId !== requestingUserId)){ //allowing admin to change name as well
+    if (userObj == null || (userObj.isAdmin = false && vendorUserId != requestingUserId)) { //allowing admin to change name as well
       res.status(403).json("Forbidden");
       return;
     }
-    
+
     const id = req.params.id;
-    const name = req.body;
+    const name = req.body.name;
     if (typeof name !== 'string') {
       res.status(400).json("Name must be a string.");
       return;
-    }  
+    }
     const updatedVendor = await Vendor.findByIdAndUpdate(
       id,
       { $set: { name } },
       { new: true, runValidators: true }
     );
 
-    if(!updatedVendor){
+    if (!updatedVendor) {
       res.status(404).json("Vendor not found.");
       return;
     }
     res.status(200).json("Successfully updated name.");
-  } catch (err){
+  } catch (err) {
     console.error(err);
     res.status(500).json("Failed to change vendor name");
   }
@@ -236,15 +247,15 @@ VendorController.patch('/:id/photos/add', requireAuth, async (req, res) => {
 
     //get vendor
     const vendorObj = await Vendor.findById(id)
-    .populate({ path: 'user', select: '-_id name auth0Id'});
-    if(!vendorObj){
+      .populate({ path: 'user', select: '-_id name auth0Id' });
+    if (!vendorObj) {
       res.status(404).json("Failed to fetch vendor");
       return;
     }
 
     //check permissions
     const auth0Id = req.auth?.payload.sub;
-    if(vendorObj.user.auth0Id !== auth0Id && !vendorObj.user.isAdmin){
+    if (vendorObj.user.auth0Id !== auth0Id && !vendorObj.user.isAdmin) {
       res.status(403).json("Forbidden");
       return;
     }
@@ -254,7 +265,7 @@ VendorController.patch('/:id/photos/add', requireAuth, async (req, res) => {
     await vendorObj.save();
 
     res.status(200).json("Successfully added image");
-  } catch (err){
+  } catch (err) {
     console.error(err);
     res.status(500).json("Failed to add image");
   }
@@ -278,15 +289,15 @@ VendorController.patch('/:id/photos/delete', requireAuth, async (req, res) => {
 
     //get vendor
     const vendorObj = await Vendor.findById(id)
-    .populate({ path: 'user', select: '-_id name auth0Id'});
-    if(!vendorObj){
+      .populate({ path: 'user', select: '-_id name auth0Id' });
+    if (!vendorObj) {
       res.status(404).json("Failed to fetch vendor");
       return;
     }
 
     //check permissions
     const auth0Id = req.auth?.payload.sub;
-    if(vendorObj.user.auth0Id !== auth0Id && !vendorObj.user.isAdmin){
+    if (vendorObj.user.auth0Id !== auth0Id && !vendorObj.user.isAdmin) {
       res.status(403).json("Forbidden");
       return;
     }
@@ -296,17 +307,16 @@ VendorController.patch('/:id/photos/delete', requireAuth, async (req, res) => {
     await vendorObj.save();
 
     res.status(200).json("Successfully deleted image");
-  } catch (err){
+  } catch (err) {
     console.error(err);
     res.status(500).json("Failed to delete image");
   }
 })
 
 // PATCH /:id/description - update vendor description
-VendorController.patch('/:id/description', requireAuth, async (req, res) => { 
-  try{
-    const auth0Id = req.auth?.payload.sub;
-    const inputId = req.params.id;
+VendorController.patch('/:id/description', requireAuth, async (req, res) => {
+  const auth0Id = req.auth?.payload.sub;
+  const inputId = req.params.id;
 
     //get requesting user
     const userObj = await User.findOne({ auth0Id });
@@ -316,77 +326,75 @@ VendorController.patch('/:id/description', requireAuth, async (req, res) => {
     const vendorObj = await Vendor.findOne({ inputId });
     const vendorUserId = vendorObj?.user;
 
-    //confirm user is either admin or the vendor themselves
-    if(!userObj || (!userObj.isAdmin && vendorUserId !== requestingUserId)){ //allowing admin to change name as well
-      res.status(403).json("Forbidden");
-      return;
-    }
-    const id = req.params;
-    const description = req.body;
-    if (typeof description !== 'string') {
-      res.status(400).json("Description must be a string.");
-    }
-    const updatedVendor = await Vendor.findByIdAndUpdate(
-      id,
-      { description },
-      { new: true, runValidators: true }
-    );
-
-    if(!updatedVendor){
-      res.status(404).json("Vendor not found.");
-      return;
-    }
-    res.status(200).json("Successfully updated vendor's description."); //success, no other returns
-  } catch (err){
-    console.error(err);
-    res.status(500).json("Failed to update vendor's description");
+  //confirm user is either admin or the vendor themselves
+  if (userObj == null || (userObj.isAdmin = false && vendorUserId != requestingUserId)) { //allowing admin to change name as well
+    res.status(403).json("Forbidden");
+    return;
   }
+  const id = req.params.id;
+  const description = req.body.description;
+  if (typeof description !== 'string') {
+    res.status(400).json("Description must be a string.");
+  }
+  const updatedVendor = await Vendor.findByIdAndUpdate(
+    id,
+    { $set: req.body },
+    { new: true, runValidators: true }
+  );
+
+  if (!updatedVendor) {
+    res.status(404).json("Vendor not found.");
+    return;
+  }
+  res.status(200).json("Successfully updated description."); //success, no other returns
 })
 
 // PATCH /:id/tags/add - adds inputted tag to array
-VendorController.patch('/:id/tags/add', requireAuth, async(req, res) => {
-  try{
-    //store tag string
-    const tag = req.body;
-    const id = req.params.id;
+VendorController.patch('/:id/tags/add', requireAuth, async (req, res) => {
 
-    //input validation
-    if (
-      !tag ||
-      typeof tag !== 'string'
-    ) {
-      res.status(400).json("Invalid tag.");
-      return;
-    }
+  try {
+    const tags = req.body.tags;
+    const id = req.params.id;
 
     //get vendor
     const vendorObj = await Vendor.findById(id)
-    .populate({ path: 'user', select: '-_id name auth0Id'});
-    if(!vendorObj){
+      .populate({ path: 'user', select: '-_id name auth0Id' });
+    if (!vendorObj) {
       res.status(404).json("Failed to fetch vendor");
       return;
     }
+
     //check for permission
     const auth0Id = req.auth?.payload.sub;
-    if(vendorObj.user.auth0Id !== auth0Id && !vendorObj.user.isAdmin){
+    if (vendorObj.user.auth0Id != auth0Id && !vendorObj.user.isAdmin) {
       res.status(403).json("Forbidden");
       return;
     }
 
-    //append to tag string
-    var length = vendorObj.tags.push(tag);
-    await vendorObj.save();
+    // check if tags are valid typing
+    tags.forEach((tag: any) => {
+      if (typeof tag !== 'string') {
+        res.status(400).json("Tags must be a string.")
+      }
+    })
+
+    // update tags in vendor
+    await Vendor.findByIdAndUpdate(
+      req.params.id,
+      { $set: req.body },
+      { new: true, runValidators: true }
+    );
 
     res.status(200).json("Successfully added tag.");
-  } catch (err){ 
+  } catch (err) {
     console.error(err);
     res.status(500).json("Failed to add tag");
   }
 })
 
 // PATCH /:id/tags/delete - remove tag at index
-VendorController.patch('/:id/tags/delete', requireAuth, async(req, res) => {
-  try{
+VendorController.patch('/:id/tags/delete', requireAuth, async (req, res) => {
+  try {
     //store tag index
     const index = req.body;
     const id = req.params.id;
@@ -402,15 +410,15 @@ VendorController.patch('/:id/tags/delete', requireAuth, async(req, res) => {
 
     //get vendor
     const vendorObj = await Vendor.findById(id)
-    .populate({ path: 'user', select: '-_id name auth0Id'});
-    if(!vendorObj){
+      .populate({ path: 'user', select: '-_id name auth0Id' });
+    if (!vendorObj) {
       res.status(404).json("Failed to fetch vendor");
       return;
     }
 
     //check for permission
     const auth0Id = req.auth?.payload.sub;
-    if(vendorObj.user.auth0Id !== auth0Id && !vendorObj.user.isAdmin){
+    if (vendorObj.user.auth0Id !== auth0Id && !vendorObj.user.isAdmin) {
       res.status(403).json("Forbidden");
       return;
     }
@@ -420,7 +428,7 @@ VendorController.patch('/:id/tags/delete', requireAuth, async(req, res) => {
     await vendorObj.save();
 
     res.status(200).json("Successfully deleted tag.");
-  } catch (err){ 
+  } catch (err) {
     console.error(err);
     res.status(500).json("Failed to delete tag");
   }
@@ -428,9 +436,9 @@ VendorController.patch('/:id/tags/delete', requireAuth, async(req, res) => {
 
 // PATCH /:id/hide - toggle hidden status
 VendorController.patch('/:id/hide', async (req, res) => {
-  try{ 
+  try {
     const vendor = await Vendor.findById(req.params.id);
-    if (!vendor){ 
+    if (!vendor) {
       res.status(404).json('Vendor not found');
       return;
     }
@@ -438,7 +446,7 @@ VendorController.patch('/:id/hide', async (req, res) => {
     vendor.hidden = !vendor.hidden;
     await vendor.save();
     res.status(200).json("Successfully toggled vendor's hidden status");
-  } catch (err){
+  } catch (err) {
     console.error(err);
     res.status(500).json("Failed to toggle vendor's hidden status");
   }

@@ -17,9 +17,9 @@ const verifyReviewAccess = async (req: Request, res: Response, next: NextFunctio
   const auth0Id = req.auth?.payload.sub;
 
   const review = await Review.findById(reviewId)
-  .populate('user')
-  .populate('vendor')
-  .populate('vendor.user');
+    .populate('user')
+    .populate('vendor')
+    .populate('vendor.user');
   if (!review) {
     res.status(404).json('Review not found');
     return;
@@ -39,16 +39,16 @@ ReviewController.get('/', async (req, res) => {
   try{
     const auth0Id = req.auth?.payload.sub;
 
-    //find user
-    const user = await User.findOne({ auth0Id });
-    if(!user){
-      res.status(404).json("No user found");
-      return
-    }
+  //find user
+  const user = await User.findOne({ auth0Id });
+  if (!user) {
+    res.status(404).json("No user found");
+    return
+  }
 
-    const reviews = await Review.find({ user: user._id })
+  const reviews = await Review.find({ user: user._id })
     .sort({ time: -1 })
-    .populate([{ path: 'user', select: '-id name'}, { path: 'vendor', select: 'name'}])
+    .populate([{ path: 'user', select: '-id name' }, { path: 'vendor', select: 'name' }])
     .select('user vendor text rating time');
 
     res.json(reviews); //only some values selected
@@ -104,22 +104,22 @@ ReviewController.post('/create', async (req, res) => {
   }
 
   //create new review
-    const review = await Review.create({
-      user: userObj._id,
-      vendor: vendorObj._id,
-      name: userObj.name,
-      text,
-      rating,
-      time: new Date()
-    });
-    await review.save();
+  const review = await Review.create({
+    user: userObj._id,
+    vendor: vendorObj._id,
+    name: userObj.name,
+    text,
+    rating,
+    time: new Date()
+  });
+  await review.save();
 
     //append to review array
     var length = vendorObj.reviews.push(review); //to capture length returned by push()
     await vendorObj.save();
 
-    //just to make sure 
-    const returnReview = await Review.findById(review._id)
+  //just to make sure 
+  const returnReview = await Review.findById(review._id)
     .populate('user', 'name')   //returning only user and vendor name, may change
     .populate('vendor', 'name');
 
@@ -132,42 +132,28 @@ ReviewController.post('/create', async (req, res) => {
 
 // PATCH /:id/hide - toggle hidden status
 ReviewController.patch('/:id/hide/:index', async (req, res) => {
-  try{
-    const review = await Review.findById(req.params.id);
-    const reviewIndex = req.params.index;
-    if (!review){ 
-      res.status(404).json('Review not found');
-      return;
-    }
+  const review = await Review.findById(req.params.id);
+  const reviewIndex = req.params.index
+  if (!review) {
+    res.status(404).json('Review not found');
+    return;
+  }
 
     review.hidden = !review.hidden;
     await review.save();
 
-    //find vendor
-    const vendorObj = await Vendor.findById(review.vendor._id);
-    if(!vendorObj){
-      res.status(404).json("Vendor for this review not found.");
-      return;
-    }
-
-    //find which index of vendor's array review is
-    var count = 0;
-    var index = 0;
-    while(vendorObj.reviews[count]){
-      if(vendorObj.reviews[count]._id === review._id){
-        index = count;
-        break;
-      }
-      count++;
-    }
-
-    //update vendor
-    vendorObj.reviews[index] = review;
-    res.status(200).json("Successfully toggled review's hidden status");
-  } catch (err) {
-    console.error(err);
-    res.status(500).json("Failed to toggle review's hidden status");
+  //also need to update the vendor review array
+  //find vendor object
+  const vendorObj = await Vendor.findById(review.vendor);
+  if (!vendorObj) {
+    res.status(404).json("Vendor not found.");
+    return;
   }
+
+  vendorObj.set(`reviews.${reviewIndex}.hidden`, review.hidden)
+  await vendorObj.save()
+  
+  res.status(200).json("Successfully toggled vendor's hidden status");
 });
 
 //TODO: additional functionality: update reviews

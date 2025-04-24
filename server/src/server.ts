@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import session from 'express-session';
 import bodyParser from 'body-parser';
 import mongoose from 'mongoose';
+import cors from 'cors'
 
 import api from './api';
 
@@ -41,6 +42,7 @@ mongoose.connect(process.env.DB_CONN_STRING || '');
 // Configure application
 const app = express();
 
+app.use(cors({origin: true}))   // change later; lets frontend to get info
 app.use(bodyParser.json());
 
 // TODO: Warning The default server-side session storage, MemoryStore, is purposely not designed for a production environment. It will leak memory under most conditions, does not scale past a single process, and is meant for debugging and developing.

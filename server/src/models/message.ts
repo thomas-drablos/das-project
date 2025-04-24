@@ -7,7 +7,7 @@ export interface IMessage {
   vendor: IVendor;
   time: Date;
   text: string;
-  sender?: 'user' | 'vendor';
+  sender: string;
 }
 
 export const messageSchema = new Schema<IMessage>(
@@ -16,7 +16,7 @@ export const messageSchema = new Schema<IMessage>(
     vendor: { type: Schema.Types.ObjectId, ref: 'Vendor', required: true},
     time: { type: Date, default: Date.now },
     text: { type: String, required: true },
-    sender: { type: String, default: "", required: true},
+    sender: { type: String, required: true }
   },
   { timestamps: true }
 );

@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { Link } from "react-router-dom";
 import { useAppUser } from "../contexts/appUserContext";
+import DOMPurify from "dompurify"; // Import DOMPurify
 
 const NavBar: React.FC = () => {
   const { loginWithRedirect, logout, isAuthenticated } = useAuth0();
@@ -21,24 +22,40 @@ const NavBar: React.FC = () => {
         </button>
         <div className="d-flex align-items-center">
           {isAuthenticated && (
-            <Link to="/dms" className="btn" style={{ marginRight: "10px" }}>
+            <Link to="/dms" className="btn" style={{ marginRight: "15px" }}>
               <i className="fas fa-envelope" style={{ fontSize: "1.5em" }} />
             </Link>
           )}
           {isAuthenticated ? (
-            <div className="dropdown">
+            <div
+              className="dropdown"
+              style={{ position: "relative", marginRight: "30px" }}
+            >
               <button
                 className="btn btn-success dropdown-toggle"
                 type="button"
                 onClick={toggleDropdown}
               >
-                {user.loading ? '...' : (user.name || 'User')}
+                {user.loading ? (
+                  "..."
+                ) : (
+                  <span
+                    dangerouslySetInnerHTML={{
+                      __html: DOMPurify.sanitize(user.name || "User"),
+                    }}
+                  />
+                )}
               </button>
               {dropdownOpen && (
                 <ul className="dropdown-menu show">
                   <li>
-                    <Link to="/profile" className="dropdown-item">
-                      Profile
+                    <Link
+                      to={user.name === "CometAdmin" ? "/admin" : "/profile"}
+                      className="dropdown-item"
+                    >
+                      {user.name === "CometAdmin"
+                        ? "Admin Dashboard"
+                        : "Profile"}
                     </Link>
                   </li>
                   <li>

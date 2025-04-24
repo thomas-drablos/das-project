@@ -5,7 +5,7 @@ import { IVendor } from './vendor';
 export interface IReview extends Document {
   user: IUser;
   vendor: IVendor;
-  name: string;
+  name: string,
   text: string;
   rating: number;
   time: Date;
