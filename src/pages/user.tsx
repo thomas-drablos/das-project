@@ -14,7 +14,6 @@ const User: React.FC = () => {
   const [userInfo, setUserInfo] = useState<any>();
   const [editName, setEditName] = useState<boolean>(false);
   const [newName, setNewName] = useState<string>(name || "");
-  const [, setShowPhotoInput] = useState<boolean>(false);
   const [showModal, setShowModal] = useState(false);
   const [profilePicUrl, setProfilePicUrl] = useState("");
 
@@ -46,14 +45,13 @@ const User: React.FC = () => {
     if (!cleanUrl) return;
 
     patchJson(
-      `http://localhost:8000/api/user/${userId}/profile-pic`,
+      `http://localhost:8000/api/user/${userId}/${userId}/profile-pic`,
       { profilePic: cleanUrl },
       apiToken
     ).then(() => {
       setUserInfo({ ...userInfo, profilePic: cleanUrl });
       setProfilePicUrl("");
       setShowModal(false); // Close the modal on successful save
-      setShowPhotoInput(false);
     });
   };
 
@@ -174,7 +172,7 @@ const User: React.FC = () => {
               autoFocus
             />
           ) : (
-            <h2>
+            <>
               <h2>
                 <span
                   dangerouslySetInnerHTML={{
@@ -182,7 +180,7 @@ const User: React.FC = () => {
                   }}
                 />
               </h2>
-            </h2>
+            </>
           )}
         </div>
 
