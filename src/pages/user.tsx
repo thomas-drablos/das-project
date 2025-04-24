@@ -179,6 +179,10 @@ const User: React.FC = () => {
                   __html: DOMPurify.sanitize(userInfo.name || ""),
                 }}
               />
+              <i
+                className="fas fa-pen"
+                style={{ marginLeft: 5, color: "#888", fontSize: "0.6em" }}
+              ></i>
             </h2>
           </>
         )}

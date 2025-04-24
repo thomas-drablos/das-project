@@ -1,5 +1,5 @@
 :root {
-  font-family: 'Montagu Slab', sans-serif !important;
+  font-family: 'Rubik', sans-serif !important;
   line-height: 1.5;
   font-weight: 400;
 
@@ -27,7 +27,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  font-family: 'Montagu Slab', cursive, sans-serif !important;
+  font-family: 'Rubik', cursive, sans-serif !important;
 }
 
 h1 {
