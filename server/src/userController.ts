@@ -117,6 +117,14 @@ UserController.patch('/:id/profile-pic', requireAuth, async (req, res) => {
     const profilePic = req.body.profilePic;
     const id = req.params.id;
 
+    if (
+      !profilePic ||
+      typeof profilePic !== 'string'
+    ) {
+      res.status(400).json({message: "Invalid profilePic URL."});
+      return;
+    }
+
     // Get user
     const userObj = await User.findOne({ userId: id });
     if (!userObj) {
