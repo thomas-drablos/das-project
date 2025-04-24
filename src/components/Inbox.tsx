@@ -18,7 +18,7 @@ const Inbox = () => {
 
   // getting the user and all conversation information
   useEffect(() => {
-    if (userId == undefined || userId == null) return
+    if (userId == undefined) return
     getJson(`http://localhost:8000/api/user/${userId}`, apiToken).then(
       setUserInfo
     );

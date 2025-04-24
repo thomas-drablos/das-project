@@ -18,7 +18,7 @@ const User: React.FC = () => {
   const [profilePicUrl, setProfilePicUrl] = useState("");
 
   useEffect(() => {
-    if (userId == undefined || userId == null) return;
+    if (userId == undefined) return;
     getJson(`api/user/${userId}`, apiToken).then(setUserInfo);
   }, [loading, name]);
 
@@ -56,7 +56,7 @@ const User: React.FC = () => {
   };
 
   return (
-    typeof userInfo === "object" && (
+    typeof userInfo == "object" ? (
       <div
         style={{
           display: "flex",
@@ -199,6 +199,12 @@ const User: React.FC = () => {
           <></>
         )}
       </div>
+    )
+    :
+    (
+      <>
+        <h1>Sorry this account has been terminated. Please contact the administrator to appeal.</h1>
+      </>
     )
   );
 };

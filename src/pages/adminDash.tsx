@@ -11,10 +11,11 @@ const AdminDashboard: React.FC = () => {
   const { loading, userId } = useAppUser();
   const { apiToken } = useApiToken();
   const [vendors, setVendors] = useState<any>();
+  const [users, setUsers] = useState<any>()
   const [userInfo, setUserInfo] = useState<any>();
 
   useEffect(() => {
-    if (apiToken != undefined) {
+    if (apiToken != undefined && userId != undefined) {
       getJson(`http://localhost:8000/api/user/${userId}`, apiToken).then(
         setUserInfo
       );
@@ -30,35 +31,50 @@ const AdminDashboard: React.FC = () => {
       getJson(`http://localhost:8000/api/vendor/${userId}/all`, apiToken).then(
         setVendors
       );
+      getJson(`http://localhost:8000/api/user/${userId}/all`, apiToken).then(
+        setUsers
+      );
     }
   }, [userInfo]);
-
-  const [users, setUsers] = useState([
-    { id: 1, name: "Jane Doe", email: "jane@example.com", hidden: false },
-    { id: 2, name: "John Smith", email: "john@example.com", hidden: true },
-  ]);
 
   const [activeTab, setActiveTab] = useState<"none" | "users" | "vendors">(
     "none"
   );
 
   const toggleVisibility = (type: "vendor" | "user", index: number) => {
+    // hiding the vendor
     if (type == "vendor") {
       const isHidden = vendors[index].hidden;
       const updatedVendors = [...vendors];
       updatedVendors[index] = { ...updatedVendors[index], hidden: !isHidden };
-      setVendors(updatedVendors);
+
       patchJson(
         `http://localhost:8000/api/vendor/${vendors[index]._id}/hide`,
         {},
         apiToken
-      );
-    } else {
-      const isHidden = users[index].hidden;
+      ).then(() => setVendors(updatedVendors))
+    } 
+    // hiding the user
+    else {
+      let isHidden = users[index].hidden;
       const updatedUsers = [...users];
       updatedUsers[index] = { ...updatedUsers[index], hidden: !isHidden };
-      setUsers(updatedUsers);
-      // insert db call
+      patchJson(
+        `http://localhost:8000/api/user/${userId}/${users[index]._id}/hide`,
+        {},
+        apiToken
+      ).then(() => {
+        setUsers(updatedUsers)
+
+        // OPTIONAL: if user is hidden also hide their vendor page if not already hidden
+        if (updatedUsers[index].vendorId != null && updatedUsers[index].hidden == true) {
+          const vendorPage = vendors.find(vendor => vendor._id == users[index].vendorId)
+          const idx = vendors.indexOf(vendorPage)
+          if (vendorPage.hidden == false) {
+            toggleVisibility("vendor", idx)
+          }
+        }
+      })
     }
   };
 
@@ -85,12 +101,11 @@ const AdminDashboard: React.FC = () => {
         <section className="mb-5">
           <h4>All Users</h4>
           <ul className="list-group">
-            {users.map((user, idx: number) => (
+            {users?.map((user: any, idx: number) => (
               <li
                 key={user.id}
-                className={`list-group-item d-flex justify-content-between align-items-center ${
-                  user.hidden ? "bg-light text-muted" : ""
-                }`}
+                className={`list-group-item d-flex justify-content-between align-items-center ${user.hidden ? "bg-light text-muted" : ""
+                  }`}
                 style={{
                   opacity: user.hidden ? 0.6 : 1,
                   fontStyle: user.hidden ? "italic" : "normal",
@@ -111,9 +126,8 @@ const AdminDashboard: React.FC = () => {
                   – <em>{user.email}</em>
                 </span>
                 <button
-                  className={`btn btn-sm ${
-                    user.hidden ? "btn-secondary" : "btn-warning"
-                  }`}
+                  className={`btn btn-sm ${user.hidden ? "btn-secondary" : "btn-warning"
+                    }`}
                   onClick={() => toggleVisibility("user", idx)}
                 >
                   {user.hidden ? "Unhide" : "Hide"}
@@ -131,9 +145,7 @@ const AdminDashboard: React.FC = () => {
             {vendors?.map((vendor: any, index: number) => (
               <li
                 key={vendor._id}
-                className={`list-group-item d-flex justify-content-between align-items-center ${
-                  vendor.hidden ? "bg-light text-muted" : ""
-                }`}
+                className={`list-group-item d-flex justify-content-between align-items-center ${vendor.hidden} ? "bg-light text-muted" : ""`}
                 style={{
                   opacity: vendor.hidden ? 0.6 : 1,
                   fontStyle: vendor.hidden ? "italic" : "normal",
@@ -153,9 +165,8 @@ const AdminDashboard: React.FC = () => {
                   />
                 </span>
                 <button
-                  className={`btn btn-sm ${
-                    vendor.hidden ? "btn-secondary" : "btn-warning"
-                  }`}
+                  className={`btn btn-sm ${vendor.hidden ? "btn-secondary" : "btn-warning"
+                    }`}
                   onClick={() => toggleVisibility("vendor", index)}
                 >
                   {vendor.hidden ? "Unhide" : "Hide"}

@@ -1,5 +1,5 @@
 // src/pages/vendor.tsx
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card } from "react-bootstrap";
 import { useAppUser } from "../contexts/appUserContext";
@@ -25,12 +25,14 @@ const VendorPage: React.FC = () => {
   const [editDescription, setEditDescription] = useState<boolean>(false);
   const [newDescription, setNewDescription] = useState<string>("");
 
-  const imageInputRef = useRef<HTMLInputElement[]>([]);
-  const newImageInputRef = useRef<HTMLInputElement>(null);
   const [imageChange, setImageChange] = useState<"update" | "delete">("update");
+  const [editProfileImage, setEditProfileImage] = useState<boolean>(false)
+  const [editImage, setEditImage] = useState<number | null>(null)
+  const [url, setUrl] = useState<string>("")
 
   const [reviewRating, setReviewRating] = useState<number>(0);
   const [reviewContent, setReviewContent] = useState<string>("");
+  const [filterStars, setFilterStars] = useState<number | "all">("all");
 
   useEffect(() => {
     if (apiToken != undefined) {
@@ -47,27 +49,31 @@ const VendorPage: React.FC = () => {
     }
   }, [userInfo]);
 
-  const handleAddImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAddImage = () => {
     //alert('adding more images')
-    const file = e.target.files?.[0];
-    if (file) {
-      const newImage = `../../public/images/${file.name}`; // TODO: replace with actual image URL
-      const updatedImages = [...vendor.photos, newImage];
+    if (url == '') return
+    const updatedImages = [...vendor.photos, url];
+    patchJson(
+      `http://localhost:8000/api/vendor/${id}/photos/add`,
+      { photos: updatedImages },
+      apiToken
+    );
+    setVendor({ ...vendor, photos: updatedImages });
+    setUrl('')
+  }
+
+  const handleImageClick = (index: number) => {
+    //alert(imageChange + ' at ' + index)
+    if (url == '' && imageChange == 'update') return
+    const updatedImages = [...vendor.photos];
+    if (imageChange == "update") {
+      updatedImages[index] = url;
       patchJson(
         `http://localhost:8000/api/vendor/${id}/photos/add`,
         { photos: updatedImages },
         apiToken
       );
-      setVendor({ ...vendor, photos: updatedImages });
-    }
-  };
-
-  const handleImageClick = (index: number) => {
-    //alert('updating image ' + index)
-    if (imageChange == "update") {
-      imageInputRef.current[index]?.click();
     } else if (imageChange == "delete") {
-      const updatedImages = [...vendor.photos];
       if (index == 0) {
         updatedImages[0] = null;
       } else {
@@ -75,24 +81,12 @@ const VendorPage: React.FC = () => {
       }
       patchJson(
         `http://localhost:8000/api/vendor/${id}/photos/delete`,
-        { id: id, index: index },
+        { index: index },
         apiToken
       );
-      setVendor({ ...vendor, photos: updatedImages });
     }
-  };
-
-  const handleImageReplace = (index: number, file: File) => {
-    //alert('handling image replacement for image ' + (index))
-    const newImage = `../../public/images/${file.name}`; //TODO: replace with actual image URL
-    const updatedImages = [...vendor.photos];
-    updatedImages[index] = newImage;
-    patchJson(
-      `http://localhost:8000/api/vendor/${id}/photos/add`,
-      { photos: updatedImages },
-      apiToken
-    );
     setVendor({ ...vendor, photos: updatedImages });
+    setUrl('')
   };
 
   const handleDM = async () => {
@@ -117,7 +111,7 @@ const VendorPage: React.FC = () => {
   };
 
   const handleReviewSubmission = () => {
-    if (reviewContent == "" || reviewRating <= 0 || reviewRating > 6) {
+    if (reviewContent == "" || reviewRating <= 0 || reviewRating > 5) {
       return;
     }
     postJson(
@@ -140,6 +134,7 @@ const VendorPage: React.FC = () => {
 
   const handleHidden = () => {
     patchJson(`http://localhost:8000/api/vendor/${id}/hide`, {}, apiToken);
+    setVendor({ ...vendor, hidden: !vendor.hidden })
   };
 
   const handleHideReview = (index: number) => {
@@ -173,23 +168,21 @@ const VendorPage: React.FC = () => {
               }}
               onClick={() => {
                 if (myPage) {
-                  handleImageClick(0);
+                  setEditProfileImage(true)
+                  setUrl(vendor.photos[0])
                 }
               }}
             />
-            <input
-              type="file"
-              accept="image/*"
-              style={{ display: "none" }}
-              ref={(e) => {
-                imageInputRef.current[0] = e!;
-              }}
-              onChange={(e) => {
-                if (e.target.files?.[0]) {
-                  handleImageReplace(0, e.target.files[0]);
-                }
-              }}
-            />
+            {editProfileImage ?
+              (<>
+                <input
+                  type="text"
+                  value={url}
+                  onChange={(e) => { setUrl(e.target.value) }}
+                  onBlur={() => { handleImageClick(0); setEditProfileImage(false) }}
+                  autoFocus
+                />
+              </>) : (<></>)}
             <div>
               {/*Vendor Store Name*/}
               <h2
@@ -227,15 +220,23 @@ const VendorPage: React.FC = () => {
           </div>
         </div>
         {/*Talk Button --> Link to DMs*/}
-        {!myPage && apiToken != undefined && (
-          <>
-            <button onClick={handleDM}>Message</button>
-          </>
-        )}
-        {/* Terminate Button if admin */}
-        {userInfo?.isAdmin && (
-          <button onClick={handleHidden}>Hide Vendor Page</button>
-        )}
+        <div>
+          {!myPage && (
+            <button className="btn btn-primary" onClick={handleDM}>
+              Message
+            </button>
+          )}
+
+          {/* Terminate Button if admin */}
+          {userInfo?.isAdmin && (
+            <button
+              className={`btn btn-${vendor.hidden ? "secondary" : "warning"} ms-2`}
+              onClick={handleHidden}
+            >
+              {vendor.hidden ? "Unhide Page" : "Hide Page"}
+            </button>
+          )}
+        </div>
 
         {/* Bio + Tags */}
         <div
@@ -361,157 +362,138 @@ const VendorPage: React.FC = () => {
               <button
                 onClick={() => {
                   if (myPage) {
-                    newImageInputRef.current?.click();
+                    setEditImage(0)
                   }
                 }}
               >
                 Click here to add more images.
               </button>
-              <input
-                type="file"
-                accept="image/*"
-                style={{ display: "none" }}
-                ref={newImageInputRef}
-                onChange={handleAddImage}
-              />
+              {editImage == 0 ?
+                (<>
+                  <input
+                    type="text"
+                    onChange={(e) => { setUrl(e.target.value) }}
+                    onBlur={() => { handleAddImage(); setEditImage(null) }}
+                    autoFocus
+                  />
+                </>) : (<></>)}
             </>
           ) : (
             <></>
           )}
           {vendor.photos.slice(1).map((photo: string, index: number) => (
             <div className="col-md-6" key={index + 1}>
-              <input
-                type="file"
-                accept="image/*"
-                style={{ display: "none" }}
-                ref={(e) => {
-                  imageInputRef.current[index + 1] = e!;
-                }}
-                onChange={(e) => {
-                  if (e.target.files?.[0]) {
-                    handleImageReplace(index + 1, e.target.files[0]);
-                  }
-                }}
-              />
               <Card className="mb-3">
-                <Card.Body>
+                <Card.Body onClick={() => {
+                  if (myPage) {
+                    if (imageChange == 'delete') {
+                      handleImageClick(index + 1);
+                    }
+                    else {
+                      setEditImage(index + 1)
+                    }
+                  }
+                }}>
                   <Card.Img
                     variant="top"
                     src={photo}
-                    onClick={() => {
-                      if (myPage) {
-                        handleImageClick(index + 1);
-                      }
-                    }}
                   />
+                  {editImage == index + 1 ?
+                    (<>
+                      <input
+                        type="text"
+                        onChange={(e) => { setUrl(e.target.value) }}
+                        onBlur={() => {
+                          handleImageClick(index + 1)
+                          setEditImage(null)
+                        }}
+                        autoFocus
+                      />
+                    </>) : (<></>)}
                 </Card.Body>
               </Card>
             </div>
           ))}
         </div>
 
-        {/*Reviews -- cannot be edited only seen*/}
-        <h4>Reviews</h4>
-        {!myPage && apiToken && (
+        {/* Reviews Section */}
+        <div className="d-flex justify-content-between align-items-center mt-4">
+          <h4 className="mb-0">Reviews</h4>
+          <select
+            className="form-select w-auto"
+            value={filterStars}
+            onChange={(e) =>
+              setFilterStars(e.target.value === "all" ? "all" : parseInt(e.target.value))
+            }
+          >
+            <option value="all">All Ratings</option>
+            {[5, 4, 3, 2, 1].map((star) => (
+              <option key={star} value={star}>
+                {star} Star{star > 1 ? "s" : ""}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {!myPage && (
           <>
-            <label>
-              Rating:
-              <div style={{ fontSize: "1.8rem", cursor: "pointer" }}>
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <span
-                    key={star}
-                    onClick={() => setReviewRating(star)}
-                    style={{
-                      color: star <= reviewRating ? "#ffc107" : "#e4e5e9",
-                      marginRight: "5px",
-                    }}
-                  >
-                    ★
-                  </span>
-                ))}
-              </div>
-            </label>
-            <br />
-            <label>
-              Review:
-              <br />
-              <textarea
-                rows={5}
-                cols={120}
-                style={{ maxWidth: "100%" }}
-                value={reviewContent}
-                onChange={(e) => setReviewContent(e.target.value)}
-              />
-            </label>
-            <br />
-            <button onClick={handleReviewSubmission}>Submit Review</button>
+            <label className="mt-3">Rating:</label>
+            <div style={{ fontSize: "1.8rem", cursor: "pointer" }}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <span
+                  key={star}
+                  onClick={() => setReviewRating(star)}
+                  style={{ color: star <= reviewRating ? "#ffc107" : "#e4e5e9" }}
+                >
+                  ★
+                </span>
+              ))}
+            </div>
+            <textarea
+              className="form-control my-2"
+              rows={3}
+              placeholder="Write your review..."
+              value={reviewContent}
+              onChange={(e) => setReviewContent(e.target.value)}
+            />
+            <button className="btn btn-success" onClick={handleReviewSubmission}>
+              Submit Review
+            </button>
           </>
         )}
-        <hr />
-        <div style={{ maxHeight: "500px", overflowY: "auto" }}>
-          {vendor?.reviews.map((review: any, idx: number) => (
-            <>
-              {review != null &&
-                (review.hidden == false || userInfo?.isAdmin) && (
-                  <div key={idx} style={{ marginBottom: "20px" }}>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                        marginBottom: "10px",
-                      }}
-                    >
-                      <p
-                        style={{
-                          fontWeight: "bold",
-                          fontSize: "1.1rem",
-                          margin: 0,
-                        }}
-                      >
-                        "{DOMPurify.sanitize(review.name || "")}"
-                      </p>
+
+        <div className="mt-3">
+          {vendor.reviews
+            .filter((review: any) =>
+              (review != null && (!review.hidden || userInfo?.isAdmin)) &&
+              (filterStars === "all" || review.rating === filterStars)
+            )
+            .map((review: any, idx: number) => (
+              <div key={idx} className={`border p-2 mb-3 rounded ${(review != null && review.hidden) ? "bg-light" : ""}`}>
+                {review != null &&
+                  (<>
+                    <div className="d-flex align-items-center justify-content-between">
+                      <strong>"{DOMPurify.sanitize(review.name)}"</strong>
                       <div>
                         {[...Array(5)].map((_, i) => (
-                          <span
-                            key={i}
-                            style={{
-                              color: i < review.rating ? "#ffc107" : "#e4e5e9",
-                              fontSize: "1.2rem",
-                            }}
-                          >
-                            ★
-                          </span>
+                          <span key={i} style={{ color: i < review.rating ? "#ffc107" : "#e4e5e9" }}>★</span>
                         ))}
-                      </div>
-                      {userInfo?.isAdmin ? (
-                        <>
+                        {userInfo?.isAdmin && (
                           <button
-                            onClick={() => {
-                              handleHideReview(idx);
-                            }}
+                            className="btn btn-sm btn-outline-warning ms-3"
+                            onClick={() => handleHideReview(idx)}
                           >
                             {review.hidden ? "Unhide" : "Hide"}
                           </button>
-                        </>
-                      ) : (
-                        <></>
-                      )}
+                        )}
+                      </div>
                     </div>
-                    <p
-                      style={{
-                        fontStyle: "italic",
-                        marginLeft: "5px",
-                        marginBottom: "8px",
-                      }}
-                    >
-                      {DOMPurify.sanitize(review.text || "")}
+                    <p className="mt-2 mb-0" style={{ fontStyle: "italic" }}>
+                      {DOMPurify.sanitize(review.text)}
                     </p>
-                    <hr style={{ borderTop: "1px solid #ccc", margin: "0" }} />
-                  </div>
-                )}
-            </>
-          ))}
+                  </>)}
+              </div>
+            ))}
         </div>
       </div>
     )
