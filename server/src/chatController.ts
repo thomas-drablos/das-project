@@ -158,19 +158,7 @@ ChatController.post('/:id/messages', verifyChatAccess, async (req, res) => {
     res.status(404).json("User not found.");
     return;
   }
-
-  // ensuring that the current user is a vendor
-  let sender:any, receiver:any
-  if (userObj.vendorId != chatObj.vendor._id) {
-    sender = chatObj.vendor._id
-    receiver = chatObj.user
-  }
-  else {
-    sender = chatObj.user
-    receiver = chatObj.vendor._id
-  }
-
-  const { text } = req.body;
+  const text = req.body.text;
 
   if (!text) {
     res.status(400).json('Missing message text');
@@ -178,21 +166,11 @@ ChatController.post('/:id/messages', verifyChatAccess, async (req, res) => {
   }
 
   const newMessage: IMessage | any = {
-    text,
+    text: text,
     time: new Date(),
-    /*// sender: chat?.user.id === req.auth?.payload.sub ? 'user' : 'vendor',
-    user: {
-      //   id: chat?.user.id!,
-      name: userObj?.name,
-      email: userObj?.email,
-    },
-    vendor: {
-      id: vendorObj?._id!,
-      name: vendorObj?.name,
-      email: vendorObj?.user.email,
-    }*/
-    user: sender,
-    vendor: receiver
+    user: chatObj.user,
+    vendor: chatObj.vendor,
+    sender: userObj.userId
   };
 
   chatObj.messages.push(newMessage);

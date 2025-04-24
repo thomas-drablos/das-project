@@ -115,8 +115,7 @@ const Chat = () => {
                 key={idx}
                 style={{
                   textAlign:
-                    m.vendor === userInfo.vendorId ||
-                    m.vendor !== conversation?.user?._id
+                    m.sender == userId
                       ? "right"
                       : "left",
                 }}
@@ -125,8 +124,7 @@ const Chat = () => {
                   style={{
                     display: "inline-block",
                     backgroundColor:
-                      m.vendor === userInfo.vendorId ||
-                      m.vendor !== conversation?.user?._id
+                      m.sender == userId
                         ? "#d1e7dd"
                         : "#e2e3e5",
                     borderRadius: "10px",
@@ -135,8 +133,8 @@ const Chat = () => {
                   }}
                 >
                   <strong>
-                    {m.vendor === userInfo.vendorId ||
-                    m.vendor !== conversation?.user?._id
+                    {m.sender == userId
+
                       ? "You"
                       : selectedPerson}
                   </strong>
