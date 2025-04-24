@@ -5,4 +5,5 @@ export interface UserDetails {
     isAdmin: boolean,
     vendorId: string | null,
     profilePic: string,
+    hidden: boolean
 }

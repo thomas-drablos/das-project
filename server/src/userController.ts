@@ -23,6 +23,7 @@ const enforceSameUser = async (req: Request, res: Response, next: NextFunction) 
     isAdmin: user.isAdmin,
     vendorId: user.vendorId,
     profilePic: user.profilePic,
+    hidden: user.hidden
   };
   next();
 }
@@ -36,6 +37,12 @@ UserController.get('/', (req: Request, res: Response) => { //check permissions??
     if (!req.userInfo) {
       res.status(500).json();
       return;
+    }
+
+    // if the user is hidden no need to provide information
+    if (req.userInfo.hidden) {
+      res.json("User has been hidden")
+      return
     }
 
     res.json(req.userInfo);

@@ -232,18 +232,20 @@ VendorController.patch('/:id/name', requireAuth, async (req, res) => {
 VendorController.patch('/:id/photos/add', requireAuth, async (req, res) => {
   try {
     //get photo url and id
-    const url = req.body;
+    const url = req.body.photos;
     const id = req.params.id;
 
     //input validation - appropriate length, type, etc.
-    if (
-      !url ||
-      typeof url !== 'string' ||  
-      !(url.startsWith('https://'))
-    ) {
+    if (!url) {
       res.status(400).json("Invalid image URL.");
       return
     }
+    url.forEach((photo: any) => {
+      if (typeof photo !== 'string' || !photo.startsWith('https://')) {
+        res.status(400).json("Invalid image URL.")
+        return
+      }
+    })
 
     //get vendor
     const vendorObj = await Vendor.findById(id)
@@ -261,7 +263,7 @@ VendorController.patch('/:id/photos/add', requireAuth, async (req, res) => {
     }
 
     //append to array
-    var length = vendorObj.photos.push(url);
+    var length = vendorObj.photos = url
     await vendorObj.save();
 
     res.status(200).json("Successfully added image");
@@ -275,12 +277,12 @@ VendorController.patch('/:id/photos/add', requireAuth, async (req, res) => {
 VendorController.patch('/:id/photos/delete', requireAuth, async (req, res) => {
   try {
     // get photo index
-    const index = req.body;
+    const index = req.body.index;
     const id = req.params.id;
 
     //input validation
     if (
-      !index ||
+      index == undefined ||
       typeof index !== 'number'
     ) {
       res.status(400).json("Invalid image index.");
@@ -303,7 +305,12 @@ VendorController.patch('/:id/photos/delete', requireAuth, async (req, res) => {
     }
 
     //delete from array
-    vendorObj.photos.splice(index, 1);
+    if (index == 0) {
+      vendorObj.photos[index] = 'https://'
+    }
+    else {
+      vendorObj.photos.splice(index, 1);
+    }
     await vendorObj.save();
 
     res.status(200).json("Successfully deleted image");
@@ -318,13 +325,13 @@ VendorController.patch('/:id/description', requireAuth, async (req, res) => {
   const auth0Id = req.auth?.payload.sub;
   const inputId = req.params.id;
 
-    //get requesting user
-    const userObj = await User.findOne({ auth0Id });
-    const requestingUserId = userObj?._id;
+  //get requesting user
+  const userObj = await User.findOne({ auth0Id });
+  const requestingUserId = userObj?._id;
 
-    //find vendor to be updated 
-    const vendorObj = await Vendor.findOne({ inputId });
-    const vendorUserId = vendorObj?.user;
+  //find vendor to be updated 
+  const vendorObj = await Vendor.findOne({ inputId });
+  const vendorUserId = vendorObj?.user;
 
   //confirm user is either admin or the vendor themselves
   if (userObj == null || (userObj.isAdmin = false && vendorUserId != requestingUserId)) { //allowing admin to change name as well
