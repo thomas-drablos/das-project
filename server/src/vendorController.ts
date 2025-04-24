@@ -30,7 +30,8 @@ VendorController.get('/:id', async (req, res) => {
     photos: vendor.photos,
     description: vendor.description,
     tags: vendor.tags,
-    reviews: vendor.reviews
+    reviews: vendor.reviews,
+    hidden: vendor.hidden
   });
 });
 

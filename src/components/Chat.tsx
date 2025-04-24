@@ -138,7 +138,7 @@ const Chat = () => {
                       ? "You"
                       : selectedPerson}
                   </strong>
-                  :
+                  :&nbsp;
                   <span
                     dangerouslySetInnerHTML={{
                       __html: DOMPurify.sanitize(m.text),
