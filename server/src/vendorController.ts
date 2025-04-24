@@ -15,24 +15,31 @@ VendorController.get('/', async (req, res) => {
 
     res.json(vendors); //only selected fields
   } catch (err) {
+    console.log(`Failed to fetch vendors: {$err}`);
     console.error(err);
-    res.status(500).json("Failed to fetch vendors");
+    res.status(500).json("Internal server error");
   }
 });
 
 // GET /:id - get a vendor by ID 
 VendorController.get('/:id', async (req, res) => {
-  const vendor = await Vendor.findById(req.params.id);
+  try{
+    const vendor = await Vendor.findById(req.params.id);
 
-  if (vendor == null) return
-  res.json({
-    name: vendor.name,
-    photos: vendor.photos,
-    description: vendor.description,
-    tags: vendor.tags,
-    reviews: vendor.reviews,
+    if (vendor == null) return
+    res.json({
+      name: vendor.name,
+      photos: vendor.photos,
+      description: vendor.description,
+      tags: vendor.tags,
+      reviews: vendor.reviews,
     hidden: vendor.hidden
-  });
+    });
+  } catch (err){
+    console.log(`Failed to fetch vendor: {$err}`);
+    console.log(err);
+    res.status(500).json("Internal server error");
+  }
 });
 
 // GET /suggestions/:query/:type - list all visible vendors based on query and type (all/name/tags categories)
@@ -64,8 +71,10 @@ VendorController.get('/suggestions/:query/:type', async (req, res) => {
     }
     res.json(Array.from(results))
   }
-  catch (error) {
-    res.status(500).json({ error: 'Server error' })
+  catch (err) {
+    console.log(`Failed to fetch vendors: {$err}`);
+    console.log(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 })
 
@@ -91,8 +100,10 @@ VendorController.get('/results/:query', async (req, res) => {
     }
     res.json(vendors)
   }
-  catch (error) {
-    res.status(500).json('Server Error')
+  catch (err) {
+    console.log(`Failed to fetch vendors: {$err}`);
+    console.log(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 })
 
@@ -114,8 +125,9 @@ VendorController.get('/:id/all', async (req, res) => {
       .select('user name photos description tags reviews hidden');
     res.json(vendors); //only selected fields
   } catch (err) {
-    console.error(err);
-    res.status(500).json("Failed to fetch vendors");
+    console.log(`Failed to fetch vendors: {$err}`);
+    console.log(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -161,8 +173,9 @@ VendorController.post('/create', requireAuth, async (req, res) => {
       .select('user name photos description tags reviews hidden');
     res.status(201).json(returnVendor);
   } catch (err) {
-    console.error(err);
-    res.status(500).json("Failed to create vendor");
+    console.log(`Failed to create vendor: {$err}`);
+    console.log(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -180,8 +193,9 @@ VendorController.patch('/:id/reviews', async (req, res) => {
       .select('user vendor text rating time');
     res.json(reviews); //only selected fields
   } catch (err) {
-    console.error(err);
-    res.status(500).json("Failed to fetch reviews");
+    console.log(`Faield to fetch reviews: {$err}`);
+    console.log(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 })
 
@@ -224,8 +238,9 @@ VendorController.patch('/:id/name', requireAuth, async (req, res) => {
     }
     res.status(200).json("Successfully updated name.");
   } catch (err) {
-    console.error(err);
-    res.status(500).json("Failed to change vendor name");
+    console.log(`Failed to update name: {$err}`);
+    console.log(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 })
 
@@ -269,8 +284,9 @@ VendorController.patch('/:id/photos/add', requireAuth, async (req, res) => {
 
     res.status(200).json("Successfully added image");
   } catch (err) {
-    console.error(err);
-    res.status(500).json("Failed to add image");
+    console.log(`Failed to add image: {$err}`);
+    console.log(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 })
 
@@ -316,45 +332,52 @@ VendorController.patch('/:id/photos/delete', requireAuth, async (req, res) => {
 
     res.status(200).json("Successfully deleted image");
   } catch (err) {
-    console.error(err);
-    res.status(500).json("Failed to delete image");
+    console.log(`Failed to delete image: {$err}`);
+    console.log(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 })
 
 // PATCH /:id/description - update vendor description
 VendorController.patch('/:id/description', requireAuth, async (req, res) => {
-  const auth0Id = req.auth?.payload.sub;
-  const inputId = req.params.id;
+  try{
+    const auth0Id = req.auth?.payload.sub;
+    const inputId = req.params.id;
 
-  //get requesting user
-  const userObj = await User.findOne({ auth0Id });
-  const requestingUserId = userObj?._id;
+    //get requesting user
+    const userObj = await User.findOne({ auth0Id });
+    const requestingUserId = userObj?._id;
 
-  //find vendor to be updated 
-  const vendorObj = await Vendor.findOne({ inputId });
-  const vendorUserId = vendorObj?.user;
+    //find vendor to be updated 
+    const vendorObj = await Vendor.findOne({ inputId });
+    const vendorUserId = vendorObj?.user;
 
-  //confirm user is either admin or the vendor themselves
-  if (userObj == null || (userObj.isAdmin = false && vendorUserId != requestingUserId)) { //allowing admin to change name as well
-    res.status(403).json("Forbidden");
-    return;
+    //confirm user is either admin or the vendor themselves
+    if (userObj == null || (userObj.isAdmin = false && vendorUserId != requestingUserId)) { //allowing admin to change name as well
+      res.status(403).json("Forbidden");
+      return;
+    }
+    const id = req.params.id;
+    const description = req.body.description;
+    if (typeof description !== 'string') {
+      res.status(400).json("Description must be a string.");
+    }
+    const updatedVendor = await Vendor.findByIdAndUpdate(
+      id,
+      { $set: req.body },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedVendor) {
+      res.status(404).json("Vendor not found.");
+      return;
+    }
+    res.status(200).json("Successfully updated description."); //success, no other returns
+  } catch (err) {
+    console.log(`Failed to update description: {$err}`);
+    console.log(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
-  const id = req.params.id;
-  const description = req.body.description;
-  if (typeof description !== 'string') {
-    res.status(400).json("Description must be a string.");
-  }
-  const updatedVendor = await Vendor.findByIdAndUpdate(
-    id,
-    { $set: req.body },
-    { new: true, runValidators: true }
-  );
-
-  if (!updatedVendor) {
-    res.status(404).json("Vendor not found.");
-    return;
-  }
-  res.status(200).json("Successfully updated description."); //success, no other returns
 })
 
 // PATCH /:id/tags/add - adds inputted tag to array
@@ -395,8 +418,9 @@ VendorController.patch('/:id/tags/add', requireAuth, async (req, res) => {
 
     res.status(200).json("Successfully added tag.");
   } catch (err) {
-    console.error(err);
-    res.status(500).json("Failed to add tag");
+    console.log(`Failed to add tag: {$err}`);
+    console.log(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 })
 
@@ -437,8 +461,9 @@ VendorController.patch('/:id/tags/delete', requireAuth, async (req, res) => {
 
     res.status(200).json("Successfully deleted tag.");
   } catch (err) {
-    console.error(err);
-    res.status(500).json("Failed to delete tag");
+    console.log(`Failed to add tag: {$err}`);
+    console.log(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 })
 
@@ -455,8 +480,9 @@ VendorController.patch('/:id/hide', async (req, res) => {
     await vendor.save();
     res.status(200).json("Successfully toggled vendor's hidden status");
   } catch (err) {
-    console.error(err);
-    res.status(500).json("Failed to toggle vendor's hidden status");
+    console.log(`Failed to toggle hidden status: {$err}`);
+    console.log(err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

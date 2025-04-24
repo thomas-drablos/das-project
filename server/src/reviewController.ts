@@ -13,25 +13,30 @@ interface ReviewRequest extends Request {
 }
 // Middleware: check review access
 const verifyReviewAccess = async (req: Request, res: Response, next: NextFunction) => {
-  const reviewId = req.params.id;
-  const auth0Id = req.auth?.payload.sub;
+  try{
+    const reviewId = req.params.id;
+    const auth0Id = req.auth?.payload.sub;
 
-  const review = await Review.findById(reviewId)
-    .populate('user')
-    .populate('vendor')
-    .populate('vendor.user');
-  if (!review) {
-    res.status(404).json('Review not found');
-    return;
-  }
+    const review = await Review.findById(reviewId)
+      .populate('user')
+      .populate('vendor')
+      .populate('vendor.user');
+    if (!review) {
+      res.status(404).json('Review not found');
+      return;
+    }
 
-  if (review.user.auth0Id !== auth0Id && (review.populated('vendor')?.populated('user') as IUser).auth0Id !== auth0Id) {
-    res.status(403).json('Forbidden');
-    return;
-  }
+    if (review.user.auth0Id !== auth0Id && (review.populated('vendor')?.populated('user') as IUser).auth0Id !== auth0Id) {
+      res.status(403).json('Forbidden');
+      return;
+    }
 
-  req.review = review;
-  next();
+    req.review = review;
+    next();
+  } catch (err) {
+    console.log(`Error in verfying review access: {$err}`);
+    console.log(err);
+    res.status(500).json({ error: 'Internal server error' });  }
 };
 
 // GET / - get all reviews made by logged-in user
@@ -53,9 +58,9 @@ ReviewController.get('/', async (req, res) => {
 
     res.json(reviews); //only some values selected
   } catch (err) {
+    console.log(`Failed to fetch reviews: {$err}`);
     console.error(err);
-    res.status(500).json("Failed to fetch reviews");
-  }
+    res.status(500).json({ error: 'Internal server error' });  }
 });
 
 // GET /:id - get a single review by id
@@ -67,9 +72,9 @@ ReviewController.get('/:id', verifyReviewAccess, async (req, res) => {
     .select('user vendor.name text rating time');
     res.json(review); //only selected fields
   } catch (err) {
+    console.log(`Failed to fetch review: {$err}`);
     console.error(err);
-    res.status(500).json("Failed to fetch review");
-  }
+    res.status(500).json({ error: 'Internal server error' });  }
 });
 
 // POST /create - post a new review
@@ -125,36 +130,39 @@ ReviewController.post('/create', async (req, res) => {
 
     res.status(201).json("Review successfully created.");
   } catch (err){
+    console.log(`Failed to create review: {$err}`);
     console.error(err);
-    res.status(500).json("Failed to create review");
-  }
+    res.status(500).json({ error: 'Internal server error' });  }
 });
 
 // PATCH /:id/hide - toggle hidden status
 ReviewController.patch('/:id/hide/:index', async (req, res) => {
-  const review = await Review.findById(req.params.id);
-  const reviewIndex = req.params.index
-  if (!review) {
-    res.status(404).json('Review not found');
-    return;
-  }
+  try {
+    const review = await Review.findById(req.params.id);
+    const reviewIndex = req.params.index
+    if (!review) {
+      res.status(404).json('Review not found');
+      return;
+    }
 
-    review.hidden = !review.hidden;
-    await review.save();
+      review.hidden = !review.hidden;
+      await review.save();
 
-  //also need to update the vendor review array
-  //find vendor object
-  const vendorObj = await Vendor.findById(review.vendor);
-  if (!vendorObj) {
-    res.status(404).json("Vendor not found.");
-    return;
-  }
+    //also need to update the vendor review array
+    //find vendor object
+    const vendorObj = await Vendor.findById(review.vendor);
+    if (!vendorObj) {
+      res.status(404).json("Vendor not found.");
+      return;
+    }
 
-  vendorObj.set(`reviews.${reviewIndex}.hidden`, review.hidden)
-  await vendorObj.save()
-  
-  res.status(200).json("Successfully toggled vendor's hidden status");
+    vendorObj.set(`reviews.${reviewIndex}.hidden`, review.hidden)
+    await vendorObj.save()
+    
+    res.status(200).json("Successfully toggled vendor's hidden status");
+  } catch (err) {
+    console.log(`Failed to toggle vendor's hidden status: {$err}`);
+    console.log(err);
+    res.status(500).json({ error: 'Internal server error' });  }
 });
-
-//TODO: additional functionality: update reviews
 export default ReviewController;
