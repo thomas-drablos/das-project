@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response, Router } from "express";
 import { requireAuth } from "./auth";
 import User from "./models/user";
+import EventLog from "./models/eventLog";
 
 const UserController: Router = Router({mergeParams: true});
 
@@ -47,13 +48,26 @@ UserController.post('/name', async (req: Request, res: Response) => {
         res.status(400).send('Must specify name in query parameter');
         return;
     }
-    if (newName.length >= 8) {
-        res.status(400).send('Name must be at least 8 characters long');
+    if (newName.length < 8 && newName.length > 20) {
+        res.status(400).send('Name must be at least 8 and at most 20 characters long');
+        return;
+    }
+
+    const nameRegex = /^[a-zA-Z'._ ]+$/
+    if (!nameRegex.test(newName)) {
+        res.status(400).send('Invalid name format');
         return;
     }
 
     // Update database
     await User.updateOne({userId: req.userInfo.id}, {name: newName});
+    await EventLog.create({
+        event: 'Changed username',
+        activeUser: req.userInfo.id,
+        oldValue: req.userInfo.name,
+        newValue: newName,
+    });
+
     res.send();
 });
 
