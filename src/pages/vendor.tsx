@@ -201,13 +201,16 @@ const VendorPage: React.FC = () => {
                       value={newName}
                       onChange={(e) => setNewName(e.target.value)}
                       onBlur={() => {
-                        patchJson(
-                          `http://localhost:8000/api/vendor/${id}/name`,
-                          { name: newName },
-                          apiToken
-                        );
-                        setVendor({ ...vendor, name: newName });
+                        if (newName != '') {
+                          patchJson(
+                            `http://localhost:8000/api/vendor/${id}/name`,
+                            { name: newName },
+                            apiToken
+                          );
+                          setVendor({ ...vendor, name: newName });
+                        }
                         setEditName(false);
+                        setNewName(vendor.name)
                       }}
                       autoFocus
                     />
@@ -221,7 +224,7 @@ const VendorPage: React.FC = () => {
         </div>
         {/*Talk Button --> Link to DMs*/}
         <div>
-          {!myPage && (
+          {!myPage && userInfo != undefined && (
             <button className="btn btn-primary" onClick={handleDM}>
               Message
             </button>
@@ -309,7 +312,7 @@ const VendorPage: React.FC = () => {
             </>
           ) : (
             <>
-              {vendor.tags.length > 0 ? (
+              {vendor.tags.length > 1 || vendor.tags[0] != '' ? (
                 vendor.tags.map((tag: string) => (
                   <span key={tag} className="badge bg-success me-2">
                     {DOMPurify.sanitize(tag || "")}
@@ -435,7 +438,7 @@ const VendorPage: React.FC = () => {
           </select>
         </div>
 
-        {!myPage && (
+        {!myPage && userInfo != undefined && (
           <>
             <label className="mt-3">Rating:</label>
             <div style={{ fontSize: "1.8rem", cursor: "pointer" }}>
