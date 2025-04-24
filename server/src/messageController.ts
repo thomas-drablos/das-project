@@ -106,38 +106,38 @@ MessageController.get('/:id', verifyMessageAccess, async (req, res) => {
 MessageController.post('/create', async (req, res) => {
   try {
     const auth0Id = req.auth?.payload.sub;
-  const { vendor, chat, text } = req.body;
+    const { vendor, chat, text } = req.body;
 
-  if (!vendor || !chat || !text) {
-    res.status(400).send('Missing required fields: vendor, chat, text');
-    return;
-  }
+    if (!vendor || !chat || !text) {
+      res.status(400).send('Missing required fields: vendor, chat, text');
+      return;
+    }
 
-  const userObj = await User.findOne({ auth0Id });
-  if (!userObj){
-    res.status(404).send('User not found');
-    return;
-  }
+    const userObj = await User.findOne({ auth0Id });
+    if (!userObj){
+      res.status(404).send('User not found');
+      return;
+    }
 
-  const chatObj = await Chat.findById(chat);
-  if (!chatObj){
-    res.status(404).send('Chat not found'); 
-    return; 
-  }
+    const chatObj = await Chat.findById(chat);
+    if (!chatObj){
+      res.status(404).send('Chat not found'); 
+      return; 
+    }
 
-  const message = await Message.create({
-    user: {
-      id: userObj.auth0Id,
-      name: userObj.name,
-      email: userObj.email,
-    },
-    vendor,
-    chat,
-    time: new Date(),
-    text,
-  });
+    const message = await Message.create({
+      user: {
+        id: userObj.auth0Id,
+        name: userObj.name,
+        email: userObj.email,
+      },
+      vendor,
+      chat,
+      time: new Date(),
+      text,
+    });
 
-  res.status(201).json(message);
+    res.status(201).json(message);
   } catch (err) {
     console.error(err);
     res.status(500).send('Failed to create message');
