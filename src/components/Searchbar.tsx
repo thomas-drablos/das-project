@@ -2,9 +2,7 @@
 import React, { useState, ChangeEvent, FormEvent, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-interface SearchBarProps {}
-
-const SearchBar: React.FC<SearchBarProps> = () => {
+const SearchBar: React.FC<void> = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const navigate = useNavigate();
@@ -16,7 +14,7 @@ const SearchBar: React.FC<SearchBarProps> = () => {
 
   const handleFormSubmit = (event: FormEvent) => {
     event.preventDefault();
-    navigate(`/results/${searchTerm}`);
+    void navigate(`/results/${searchTerm}`);
   };
 
   useEffect(() => {
@@ -35,10 +33,12 @@ const SearchBar: React.FC<SearchBarProps> = () => {
       };
 
       const timeoutId = setTimeout(() => {
-        fetchSuggestions();
+        void fetchSuggestions();
       }, 300);
 
-      return () => clearTimeout(timeoutId);
+      return () => {
+        clearTimeout(timeoutId);
+      };
     } else {
       setSuggestions([]);
     }

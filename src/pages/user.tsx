@@ -21,7 +21,7 @@ const User: React.FC = () => {
       >
         <img
           src={user?.picture}
-          alt={user?.name || "User Profile"}
+          alt={user?.name ?? "User Profile"}
           style={{
             borderRadius: "50%",
             width: "150px",

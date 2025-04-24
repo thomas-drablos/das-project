@@ -32,7 +32,7 @@ const NavBar: React.FC = () => {
                 type="button"
                 onClick={toggleDropdown}
               >
-                {user.loading ? '...' : (user.name || 'User')}
+                {user.loading ? '...' : (user.name ?? 'User')}
               </button>
               {dropdownOpen && (
                 <ul className="dropdown-menu show">
@@ -45,7 +45,7 @@ const NavBar: React.FC = () => {
                     <button
                       className="dropdown-item"
                       onClick={() =>
-                        logout({
+                        void logout({
                           logoutParams: { returnTo: window.location.origin },
                         })
                       }
@@ -59,7 +59,7 @@ const NavBar: React.FC = () => {
           ) : (
             <button
               className="btn btn-outline-success"
-              onClick={() => loginWithRedirect()}
+              onClick={() => void loginWithRedirect()}
             >
               Login
             </button>

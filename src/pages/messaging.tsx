@@ -44,7 +44,7 @@ const Messaging: React.FC = () => {
                     ? "#f0f0f0"
                     : "transparent",
               }}
-              onClick={() => handlePersonClick(conversation.person)}
+              onClick={() => { handlePersonClick(conversation.person) }}
             >
               {conversation.person}
             </li>

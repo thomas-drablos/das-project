@@ -39,7 +39,7 @@ const Results: React.FC = () => {
         setResults(simulatedResults);
       };
 
-      fetchResults();
+      void fetchResults();
     } else {
       setResults([]);
     }
@@ -47,7 +47,7 @@ const Results: React.FC = () => {
 
   return (
     <div>
-      <h1>Results for "{params.query}"</h1>
+      <h1>{`Results for "${params.query}"`}</h1>
       {results.length > 0 ? (
         <ul>
           {results.map((result) => (

@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useEffect, useState } from "react"
+import React, { createContext, useCallback, useContext, useEffect, useState } from "react"
 import { useApiToken } from "./apiTokenContext";
 import { getJson, postJson } from "../util";
 import { useAuth0 } from "@auth0/auth0-react";
+import { RegisteredUserResponse, UserInfoResponse } from "../types";
 
 export interface AppUser {
   loading: boolean,
@@ -16,44 +17,41 @@ export const AppUserProvider = ({children}: React.PropsWithChildren) => {
   const { user } = useAuth0();
   const [ value, setValue ] = useState<AppUser>({loading: true});
 
-  const registerNewUser = async () => {
-    const data = await postJson<any>('/api/register', {
-      name: user?.preferred_username || user?.nickname || user?.name,
+  const registerNewUser = useCallback(async () => {
+    const data = await postJson<RegisteredUserResponse>('/api/register', {
+      name: user?.preferred_username ?? user?.nickname ?? user?.name,
       email: user?.email,
     }, apiToken);
 
     setValue({
       loading: false,
-      userId: data?.userId,
-      name: data?.name,
+      userId: data.userId,
+      name: data.name,
     });
-  };
+  }, [user, apiToken]);
 
   useEffect(() => {
     if (apiToken === undefined)
       return;
 
-    getJson<any>('/api/userinfo', apiToken)
+    getJson<UserInfoResponse>('/api/userinfo', apiToken)
       .then(data => {
-        const exists = data?.exists;
-        if (exists === false) {
-          registerNewUser();
+        const exists = data.exists;
+        if (!exists) {
+          void registerNewUser();
         }
-
-        else if (exists === true) {
+        else {
           setValue({
             loading: false,
-            userId: data?.userId,
-            name: data?.name,
+            userId: data.userId,
+            name: data.name,
           });
         }
-        else
-          console.log('Bad userinfo response');
       })
-      .catch(err => {
+      .catch((err: unknown) => {
         console.log(err);
       });
-  }, [apiToken]);
+  }, [apiToken, registerNewUser]);
 
   return <AppUserContext.Provider value={value}>{children}</AppUserContext.Provider>
 }

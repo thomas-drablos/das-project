@@ -20,7 +20,7 @@ export async function postJson<T>(url: string, payload: unknown, authToken?: str
 
 interface RequestProps {
   method: 'GET' | 'POST';
-  headers?: {[k: string]: string}
+  headers?: Record<string, string>,
   body?: string;
 }
 

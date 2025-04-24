@@ -25,8 +25,8 @@ export const ApiTokenProvider = ({children}: React.PropsWithChildren) => {
   const requiresAuth = numRequiresAuth > 0;
 
   // Get consent from user to connect application account
-  const getConsent = async () => {
-    await getAccessTokenWithPopup({
+  const getConsent = () => {
+    getAccessTokenWithPopup({
       authorizationParams: {audience: 'http://api.cometcommerce.com'},
     })
       .then(token => {
@@ -34,10 +34,16 @@ export const ApiTokenProvider = ({children}: React.PropsWithChildren) => {
         setNeedsConsent(false);
         setAuthError('');
       })
-      .catch(error => {
-        setAuthError(`Error linking account: ${error.error}`);
-        console.log(`Error getting consent to link account: ${error?.error}`);
-        console.log(error);
+      .catch((err: unknown) => {
+        const error = err as {error: string};
+        if (error.error) {
+          setAuthError(`Error linking account: ${error.error}`);
+          console.log(`Error getting consent to link account: ${error.error}`);
+        }
+        else {
+          setAuthError('Unknown error while linking account');
+        }
+        console.log(err);
       });
   };
 
@@ -50,10 +56,17 @@ export const ApiTokenProvider = ({children}: React.PropsWithChildren) => {
         setNeedsConsent(false);
         setAuthError('');
       })
-      .catch(error => {
+      .catch((err: unknown) => {
         // We already have token, so disregard any latent errors
         if (apiToken !== undefined)
           return;
+
+        const error = err as {error: string};
+        if (!error.error) {
+          setAuthError('Unknown log-in error has occurred');
+          console.log(err);
+          return;
+        }
 
         if (error.error === 'login_required') {
           if (requiresAuth) {
@@ -72,7 +85,7 @@ export const ApiTokenProvider = ({children}: React.PropsWithChildren) => {
         }
         console.log(error);
       })
-  }, [getAccessTokenSilently, isAuthenticated]);
+  }, [getAccessTokenSilently, isAuthenticated, apiToken, requiresAuth]);
 
   const value: ApiTokenContextType = {
     result: {
@@ -88,7 +101,7 @@ export const ApiTokenProvider = ({children}: React.PropsWithChildren) => {
   return <ApiTokenContext.Provider value={value}>{children}</ApiTokenContext.Provider>;
 }
 
-export function useApiToken(requiresAuth=false): ApiTokenResult {
+export const useApiToken = (requiresAuth=false): ApiTokenResult => {
   const value = useContext(ApiTokenContext);
   if (value === undefined) {
     throw new Error('useApiToken must be used within an ApiTokenProvider');
@@ -99,6 +112,7 @@ export function useApiToken(requiresAuth=false): ApiTokenResult {
       value.changeNumRequiresAuth(1);
       return () => { value.changeNumRequiresAuth(-1); };
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [requiresAuth]);
 
   return value.result;
