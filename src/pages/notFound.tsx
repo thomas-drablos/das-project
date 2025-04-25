@@ -21,8 +21,8 @@ const NotFoundPage: React.FC = () => {
         Oops! You seem to have lost your way!
       </p>
       <p style={{ marginBottom: "30px" }}>
-        The page you're looking for could not be found might have been moved or
-        deleted. That, or you might have entered an incorrect URL.
+        The page you're looking for could not be found, and might have been
+        moved or deleted. That, or you might have entered an incorrect URL.
       </p>
     </div>
   );
