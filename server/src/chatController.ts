@@ -88,7 +88,8 @@ ChatController.get('/:id', verifyChatAccess, async (req, res) => {
     //find the chat 
     const inputId = req.params.id;
     const chatObj = await Chat.findById(inputId)
-      .populate(['user', 'vendor'])
+      .populate('user', 'name -_id')
+      .populate('vendor', 'name')
       .select('user vendor time messages invoices');
     res.json(chatObj);
   } catch (err) {
@@ -123,8 +124,8 @@ ChatController.post('/create', async (req, res) => {
 
     // Prevent duplicate chat between same user and vendor
     const existingChat = await Chat.findOne({
-      'user.id': userObj.auth0Id,
-      'vendor.id': vendor.id
+      'user': userObj._id,
+      'vendor': vendorObj._id
     });
 
     if (existingChat) {
@@ -141,7 +142,7 @@ ChatController.post('/create', async (req, res) => {
     });
 
     const returnChat = await Chat.findById(chat._id)
-      .populate('user', 'name')
+      .populate('user', 'name -_id')
       .populate('vendor', 'name');
 
     res.status(201).json(returnChat);
@@ -156,7 +157,9 @@ ChatController.get('/:id/messages', verifyChatAccess, async (req, res) => {
     const chat = req.params.id;
 
     // Find the chat
-    const existingChat = await Chat.findById(chat);
+    const existingChat = await Chat.findById(chat)
+      .populate('user', 'name -_id')
+      .populate('vendor', 'name');
 
     if (!existingChat) {
       res.status(500).json('Chat not found');

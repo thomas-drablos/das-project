@@ -31,7 +31,7 @@ export async function patchJson<T>(url: string, payload: unknown, authToken?: st
 
 interface RequestProps {
   method: 'GET' | 'POST' | 'PATCH';
-  headers?: {[k: string]: string}
+  headers?: Record<string, string>,
   body?: string;
 }
 
@@ -39,7 +39,7 @@ async function request<T>(url: string, props: RequestProps): Promise<T> {
   const response = await fetch(url, props);
   if (!response.ok) {
     if (response.status === 400) {
-      const e: unknown = await response.json()
+      const e: any = await response.json()
       if ('detail' in e && typeof e.detail === 'string')
         throw new Error(e.detail)
       throw new Error('Unexpected API Error')

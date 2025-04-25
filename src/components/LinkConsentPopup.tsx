@@ -15,8 +15,8 @@ const LinkConsentPopup: React.FC = () => {
   const { needsConsent, getConsent, authError } = useApiToken();
 
   const handleLogout = () => {
-    logout({
-      logoutParams: { returnTo: window.location.href },
+    void logout({
+      logoutParams: {returnTo: window.location.href}
     });
   };
 

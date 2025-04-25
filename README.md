@@ -21,7 +21,7 @@ npm start
 
 This will first install all of the neccessary packages for the web-server, then do the same for the backend API server, and start the API server. Then, in a **second** terminal at the root of the project run the following command:
 ```cmd
-npm run dev
+npm start
 ```
 This will start the front-end project. Please note that two terminals are required to run the project, as the front-end and back-end projects are separate. At this point, in your browser, navigate to [`http://localhost:5173`](http://localhost:5173) to view the project. 
 
@@ -61,7 +61,7 @@ At this point, the certificate should be trusted by your computer and you should
 > 
 > This will first install all of the neccessary packages for the web-server, then do the same for the backend API server, and start the API server. Then, in a **second** terminal at the root of the project run the following command:
 > ```cmd
-> npm run dev
+> npm start
 > ```
 
 ### Clean Up
