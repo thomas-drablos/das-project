@@ -30,7 +30,7 @@ const SearchBar: React.FC = () => {
       setSuggestions([]);
       return;
     }
-    const response = getJson(
+    const response = getJson<string[]>(
       `/api/vendor/suggestions/${value}/${searchType}`
     );
     response.then((results) => {

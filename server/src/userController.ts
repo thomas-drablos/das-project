@@ -110,10 +110,10 @@ UserController.patch('/name', async (req: Request, res: Response) => {
     }
 
     // Update database
-    await User.updateOne({ userId: req.userInfo.id }, { name: newName });
+    const updatedUser = await User.updateOne({ userId: req.userInfo.id }, { name: newName });
     await EventLog.create({
       event: 'Changed username',
-      activeUser: req.userInfo.id,
+      activeUser: updatedUser.upsertedId,
       oldValue: req.userInfo.name,
       newValue: newName,
     });

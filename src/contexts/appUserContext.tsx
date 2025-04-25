@@ -18,7 +18,7 @@ export const AppUserProvider = ({ children }: React.PropsWithChildren) => {
   const [value, setValue] = useState<AppUser>({ loading: true });
 
   const registerNewUser = useCallback(async () => {
-    const data = await postJson<RegisteredUserResponse>(\
+    const data = await postJson<RegisteredUserResponse>(
       '/api/register',
       {
         name: user?.preferred_username ?? user?.nickname ?? user?.name,
