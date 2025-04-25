@@ -31,5 +31,6 @@ env
 # Node crap
 .nvmrc
 
-#Environment variables
+# Environment variables
 .env
+secrets/
