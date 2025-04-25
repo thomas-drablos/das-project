@@ -120,7 +120,7 @@ UserController.patch('/name', async (req: Request, res: Response) => {
 
     res.status(200).json('Successfully created name');
   } catch (err) {
-    console.log(`Failed to set user name: {$err}`);
+    console.log(`Failed to set user name: ${err}`);
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });  }
 });
@@ -159,7 +159,7 @@ UserController.patch('/:id/profile-pic', requireAuth, async (req, res) => {
 
     res.status(200).json("Successfully set profile picture");
   } catch (err) {
-    console.log(`Failed to set profile picture: {$err}`);
+    console.log(`Failed to set profile picture: ${err}`);
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });  }
 });
@@ -189,7 +189,7 @@ UserController.patch('/:id/profile-pic/delete', requireAuth, async (req, res) =>
 
     res.status(200).json("Successfully deleted profile picture");
   } catch (err) {
-    console.log(`Failed to delete profile picture: {$err}`);
+    console.log(`Failed to delete profile picture: ${err}`);
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });  }
 });
@@ -210,7 +210,7 @@ UserController.patch('/:userId/hide', async (req, res) => {
     await user.save()
     res.status(200).json("Successfully toggled user's hidden status")
   } catch (err) {
-    console.log(`Failed to toggle user's hidden status: {$err}`);
+    console.log(`Failed to toggle user's hidden status: ${err}`);
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });  }
 })

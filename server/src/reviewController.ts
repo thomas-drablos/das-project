@@ -1,16 +1,23 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { requireAuth } from './auth';
-import Review, { IReview } from './models/review';
+import Review, { IReview, reviewSchema } from './models/review';
 import User, { IUser } from './models/user';
 import Vendor from './models/vendor';
+import EventLog from './models/eventLog';
 
 const ReviewController: Router = Router({ mergeParams: true });
 
 ReviewController.use(requireAuth);
 
-interface ReviewRequest extends Request {
-  review: IReview;
+declare global {
+  namespace Express {
+    interface Request {
+      review?: IReview;
+    }
+  }
 }
+
+
 // Middleware: check review access
 const verifyReviewAccess = async (req: Request, res: Response, next: NextFunction) => {
   try{
@@ -53,12 +60,12 @@ ReviewController.get('/', async (req, res) => {
 
   const reviews = await Review.find({ user: user._id })
     .sort({ time: -1 })
-    .populate([{ path: 'user', select: '-id name' }, { path: 'vendor', select: 'name' }])
+    .populate([{ path: 'user', select: '-_id name' }, { path: 'vendor', select: 'name' }])
     .select('user vendor text rating time');
 
     res.json(reviews); //only some values selected
   } catch (err) {
-    console.log(`Failed to fetch reviews: {$err}`);
+    console.log(`Failed to fetch reviews: ${err}`);
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });  }
 });
@@ -66,13 +73,17 @@ ReviewController.get('/', async (req, res) => {
 // GET /:id - get a single review by id
 ReviewController.get('/:id', verifyReviewAccess, async (req, res) => {
   try {
-    const reviewId = (req as ReviewRequest).review._id;
+    const reviewId = req.review?._id;
+    if (!reviewId) {
+      res.status(500).send('Internal server error');
+      return;
+    }
     const review = await Review.findById(reviewId)
-    .populate([{ path: 'user', select: '-id name' }, { path: 'vendor', select: 'name'}])
+    .populate([{ path: 'user', select: '-_id name' }, { path: 'vendor', select: 'name'}])
     .select('user vendor.name text rating time');
     res.json(review); //only selected fields
   } catch (err) {
-    console.log(`Failed to fetch review: {$err}`);
+    console.log(`Failed to fetch review: ${err}`);
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });  }
 });
@@ -84,7 +95,7 @@ ReviewController.post('/create', async (req, res) => {
     const auth0Id = req.auth?.payload.sub;
     const { vendor, text, rating } = req.body;
 
-    if (!vendor || !text || rating == null) {
+    if (!vendor || !text || !rating) {
       res.status(400).json('Missing required field(s)');
       return;
     }
@@ -117,20 +128,22 @@ ReviewController.post('/create', async (req, res) => {
     rating,
     time: new Date()
   });
+
   await review.save();
+
+  await EventLog.create({
+    event: 'Created review',
+    activeUser: userObj._id,
+    newValue: review._id,
+  });
 
     //append to review array
     var length = vendorObj.reviews.push(review); //to capture length returned by push()
     await vendorObj.save();
 
-  //just to make sure 
-  const returnReview = await Review.findById(review._id)
-    .populate('user', 'name')   //returning only user and vendor name, may change
-    .populate('vendor', 'name');
-
     res.status(201).json("Review successfully created.");
   } catch (err){
-    console.log(`Failed to create review: {$err}`);
+    console.log(`Failed to create review: ${err}`);
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });  }
 });
@@ -138,6 +151,13 @@ ReviewController.post('/create', async (req, res) => {
 // PATCH /:id/hide - toggle hidden status
 ReviewController.patch('/:id/hide/:index', async (req, res) => {
   try {
+    const auth0Id = req.auth?.payload.sub;
+    const user = await User.findOne({ auth0Id }, 'isAdmin');
+    if (user === null || !user.isAdmin) {
+      res.status(403).send('Not authorized');
+      return;
+    }
+
     const review = await Review.findById(req.params.id);
     const reviewIndex = req.params.index
     if (!review) {
@@ -145,8 +165,8 @@ ReviewController.patch('/:id/hide/:index', async (req, res) => {
       return;
     }
 
-      review.hidden = !review.hidden;
-      await review.save();
+    review.hidden = !review.hidden;
+    await review.save();
 
     //also need to update the vendor review array
     //find vendor object
@@ -156,8 +176,8 @@ ReviewController.patch('/:id/hide/:index', async (req, res) => {
       return;
     }
 
-    vendorObj.set(`reviews.${reviewIndex}.hidden`, review.hidden)
-    await vendorObj.save()
+    vendorObj.set(`reviews.${reviewIndex}.hidden`, review.hidden);
+    await vendorObj.save();
     
     res.status(200).json("Successfully toggled vendor's hidden status");
   } catch (err) {

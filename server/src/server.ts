@@ -52,14 +52,12 @@ app.use(cors({
 
 app.use(bodyParser.json());
 
-// TODO: Warning The default server-side session storage, MemoryStore, is purposely not designed for a production environment. It will leak memory under most conditions, does not scale past a single process, and is meant for debugging and developing.
-// see https://expressjs.com/en/resources/middleware/session.html#compatible-session-stores
 app.use(session({
     secret: 'key',
     cookie: {
         httpOnly: true,
         maxAge: 7200000, // 2 hours in millis
-        // secure: true, // TODO once HTTPS set up
+        secure: process.env.ENABLE_HTTPS==="true",
     }
 }));
 
@@ -67,7 +65,7 @@ app.use('/api', api);
 // app.use(express.static(path.join(__dirname, '../dist')));
 
 if (process.env.ENVIRONMENT !== 'DEV' || process.env.ENABLE_HTTPS === "true") {
-    if (process.env.ENVIRONMENT === 'DEV' && process.env.ENABLE_HTTPS !== "true")
+    if (process.env.ENVIRONMENT !== 'DEV' && process.env.ENABLE_HTTPS !== "true")
         console.log('HTTPS cannot be disabled outside of environment DEV, proceeding with HTTPS anyways');
 
     const privateKey = fs.readFileSync(process.env.SSL_PRIVATE_KEY || '').toString();
