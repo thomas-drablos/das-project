@@ -5,8 +5,8 @@ import { getJson } from "../util";
 import "./SearchBar.css"; // Import the CSS file
 
 const SearchBar: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [suggestions, setSuggestions] = useState<any>([]);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [suggestions, setSuggestions] = useState<string[]>([]);
   const [searchType, setSearchType] = useState<"all" | "name" | "tags">("all");
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -14,7 +14,7 @@ const SearchBar: React.FC = () => {
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (searchTerm.trim()) {
-      navigate(`/results/${searchTerm}`);
+      void navigate(`/results/${searchTerm}`);
     }
   };
 

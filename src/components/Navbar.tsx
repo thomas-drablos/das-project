@@ -57,7 +57,7 @@ const NavBar: React.FC = () => {
                     <button
                       className="dropdown-item"
                       onClick={() =>
-                        logout({
+                        void logout({
                           logoutParams: { returnTo: window.location.origin },
                         })
                       }
@@ -71,7 +71,7 @@ const NavBar: React.FC = () => {
           ) : (
             <button
               className="btn btn-outline-success"
-              onClick={() => loginWithRedirect()}
+              onClick={() => void loginWithRedirect()}
             >
               Login
             </button>

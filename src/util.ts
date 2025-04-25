@@ -31,7 +31,7 @@ export async function patchJson<T>(url: string, payload: unknown, authToken?: st
 
 interface RequestProps {
   method: 'GET' | 'POST' | 'PATCH';
-  headers?: {[k: string]: string}
+  headers?: Record<string, string>,
   body?: string;
 }
 

@@ -2,6 +2,7 @@ import { NextFunction, Request, Response, Router } from "express";
 import { requireAuth } from "./auth";
 import User from "./models/user";
 import { auth } from "express-oauth2-jwt-bearer";
+import EventLog from "./models/eventLog";
 
 const UserController: Router = Router({ mergeParams: true });
 
@@ -102,8 +103,21 @@ UserController.patch('/name', async (req: Request, res: Response) => {
       return;
     }
 
+    const nameRegex = /^[a-zA-Z'._ ]+$/
+    if (!nameRegex.test(newName)) {
+        res.status(400).send('Invalid name format');
+        return;
+    }
+
     // Update database
     await User.updateOne({ userId: req.userInfo.id }, { name: newName });
+    await EventLog.create({
+      event: 'Changed username',
+      activeUser: req.userInfo.id,
+      oldValue: req.userInfo.name,
+      newValue: newName,
+    });
+
     res.status(200).json('Successfully created name');
   } catch (err) {
     console.log(`Failed to set user name: {$err}`);
