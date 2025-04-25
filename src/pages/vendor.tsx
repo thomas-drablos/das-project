@@ -41,11 +41,11 @@ const VendorPage: React.FC = () => {
 
   useEffect(() => {
     if (apiToken != undefined) {
-      getJson(`http://localhost:8000/api/user/${userId}`, apiToken).then(
+      getJson(`/api/user/${userId}`, apiToken).then(
         setUserInfo
       );
     }
-    getJson(`http://localhost:8000/api/vendor/${id}`).then(setVendor);
+    getJson(`/api/vendor/${id}`).then(setVendor);
   }, [loading, id]);
 
   useEffect(() => {
@@ -72,7 +72,7 @@ const VendorPage: React.FC = () => {
     if (url == "") return;
     const updatedImages = [...vendor.photos, url];
     patchJson(
-      `http://localhost:8000/api/vendor/${id}/photos/add`,
+      `/api/vendor/${id}/photos/add`,
       { photos: updatedImages },
       apiToken
     );
@@ -87,7 +87,7 @@ const VendorPage: React.FC = () => {
     if (imageChange == "update") {
       updatedImages[index] = url;
       patchJson(
-        `http://localhost:8000/api/vendor/${id}/photos/add`,
+        `/api/vendor/${id}/photos/add`,
         { photos: updatedImages },
         apiToken
       );
@@ -98,7 +98,7 @@ const VendorPage: React.FC = () => {
         updatedImages.splice(index, 1);
       }
       patchJson(
-        `http://localhost:8000/api/vendor/${id}/photos/delete`,
+        `/api/vendor/${id}/photos/delete`,
         { index: index },
         apiToken
       );
@@ -113,12 +113,12 @@ const VendorPage: React.FC = () => {
       return;
     }
     let conversationId: string;
-    await getJson(`http://localhost:8000/api/chat?vendor=${id}`, apiToken).then(
+    await getJson(`/api/chat?vendor=${id}`, apiToken).then(
       async (result: any) => {
         // there is no conversation that exists, make one
         if (result.length == 0) {
           await postJson(
-            `http://localhost:8000/api/chat/create`,
+            `/api/chat/create`,
             { vendor: id },
             apiToken
           ).then((chat: any) => {
@@ -141,7 +141,7 @@ const VendorPage: React.FC = () => {
       return;
     }
     postJson(
-      `http://localhost:8000/api/review/create`,
+      `/api/review/create`,
       { vendor: id, text: reviewContent, rating: reviewRating },
       apiToken
     );
@@ -159,7 +159,7 @@ const VendorPage: React.FC = () => {
   };
 
   const handleHidden = () => {
-    patchJson(`http://localhost:8000/api/vendor/${id}/hide`, {}, apiToken);
+    patchJson(`/api/vendor/${id}/hide`, {}, apiToken);
     setVendor({ ...vendor, hidden: !vendor.hidden });
   };
 
@@ -169,7 +169,7 @@ const VendorPage: React.FC = () => {
     updatedReviews[index] = { ...updatedReviews[index], hidden: !isHidden };
     setVendor({ ...vendor, reviews: updatedReviews });
     patchJson(
-      `http://localhost:8000/api/review/${vendor.reviews[index]._id}/hide/${index}`,
+      `/api/review/${vendor.reviews[index]._id}/hide/${index}`,
       {},
       apiToken
     );
@@ -266,7 +266,7 @@ const VendorPage: React.FC = () => {
                         onBlur={() => {
                           if (newName != "") {
                             patchJson(
-                              `http://localhost:8000/api/vendor/${id}/name`,
+                              `/api/vendor/${id}/name`,
                               { name: newName },
                               apiToken
                             );
@@ -296,9 +296,8 @@ const VendorPage: React.FC = () => {
             {/* Terminate Button if admin */}
             {userInfo?.isAdmin && (
               <button
-                className={`btn btn-${
-                  vendor.hidden ? "secondary" : "warning"
-                } ms-2`}
+                className={`btn btn-${vendor.hidden ? "secondary" : "warning"
+                  } ms-2`}
                 onClick={handleHidden}
               >
                 {vendor.hidden ? "Unhide Page" : "Hide Page"}
@@ -325,7 +324,7 @@ const VendorPage: React.FC = () => {
                   onChange={(e) => setNewDescription(e.target.value)}
                   onBlur={() => {
                     patchJson(
-                      `http://localhost:8000/api/vendor/${id}/description`,
+                      `/api/vendor/${id}/description`,
                       { description: newDescription },
                       apiToken
                     );
@@ -365,7 +364,7 @@ const VendorPage: React.FC = () => {
                   onBlur={() => {
                     const updateTags = newTags.split(" ");
                     patchJson(
-                      `http://localhost:8000/api/vendor/${id}/tags/add`,
+                      `/api/vendor/${id}/tags/add`,
                       { tags: updateTags },
                       apiToken
                     );
@@ -559,9 +558,8 @@ const VendorPage: React.FC = () => {
               .map((review: any, idx: number) => (
                 <div
                   key={idx}
-                  className={`border p-2 mb-3 rounded ${
-                    review != null && review.hidden ? "bg-light" : ""
-                  }`}
+                  className={`border p-2 mb-3 rounded ${review != null && review.hidden ? "bg-light" : ""
+                    }`}
                 >
                   {review != null && (
                     <>

@@ -6,7 +6,6 @@ import https from 'https';
 import session from 'express-session';
 import bodyParser from 'body-parser';
 import mongoose from 'mongoose';
-import cors from 'cors'
 
 import api from './api';
 
