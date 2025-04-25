@@ -34,8 +34,10 @@ const VendorPage: React.FC = () => {
   const [reviewContent, setReviewContent] = useState<string>("");
   const [filterStars, setFilterStars] = useState<number | "all">("all");
   const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
+  const [showHiddenModal, setShowHiddenModal] = useState<boolean>(false);
 
   const handleCloseLoginModal = () => setShowLoginModal(false);
+  const handleCloseHiddenModal = () => setShowHiddenModal(false);
 
   useEffect(() => {
     if (apiToken != undefined) {
@@ -51,6 +53,19 @@ const VendorPage: React.FC = () => {
       setMyPage(true);
     }
   }, [userInfo]);
+
+  useEffect(() => {
+    if (myPage && vendor?.hidden) {
+      setShowHiddenModal(true);
+    } else if (
+      vendor?.hidden &&
+      (!userId || (userId && !myPage && !userInfo?.isAdmin))
+    ) {
+      navigate("/not-found");
+    } else {
+      setShowHiddenModal(false);
+    }
+  }, [myPage, vendor?.hidden, navigate, userId, userInfo?.isAdmin]);
 
   const handleAddImage = () => {
     //alert('adding more images')
@@ -175,6 +190,22 @@ const VendorPage: React.FC = () => {
             </Button>
           </Modal.Footer>
         </Modal>
+        <Modal show={showHiddenModal} onHide={handleCloseHiddenModal}>
+          {" "}
+          <Modal.Header closeButton>
+            <Modal.Title>Oh no!</Modal.Title>{" "}
+          </Modal.Header>{" "}
+          <Modal.Body>
+            This page has been hidden from potential customers. To appeal this
+            decision, please contact an administrator.
+          </Modal.Body>{" "}
+          <Modal.Footer>
+            {" "}
+            <Button variant="primary" onClick={handleCloseHiddenModal}>
+              Close{" "}
+            </Button>{" "}
+          </Modal.Footer>{" "}
+        </Modal>
         <div className="container mt-5">
           {/* Header: Profile picture, name, talk button */}
           <div className="d-flex justify-content-between align-items-center mb-3">
@@ -233,17 +264,17 @@ const VendorPage: React.FC = () => {
                         value={newName}
                         onChange={(e) => setNewName(e.target.value)}
                         onBlur={() => {
-                          if (newName != '') {
-                          patchJson(
+                          if (newName != "") {
+                            patchJson(
                               `http://localhost:8000/api/vendor/${id}/name`,
                               { name: newName },
                               apiToken
                             );
                             setVendor({ ...vendor, name: newName });
                           }
-                        setEditName(false);
-                          setNewName(vendor.name)
-                      }}
+                          setEditName(false);
+                          setNewName(vendor.name);
+                        }}
                         autoFocus
                       />
                     </>
@@ -346,7 +377,7 @@ const VendorPage: React.FC = () => {
               </>
             ) : (
               <>
-                {vendor.tags.length > 1 || vendor.tags[0] != '' ? (
+                {vendor.tags.length > 1 || vendor.tags[0] != "" ? (
                   vendor.tags.map((tag: string) => (
                     <span key={tag} className="badge bg-success me-2">
                       {DOMPurify.sanitize(tag || "")}
