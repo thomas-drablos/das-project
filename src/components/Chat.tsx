@@ -4,7 +4,6 @@ import { useAppUser } from "../contexts/appUserContext";
 import { useApiToken } from "../contexts/apiTokenContext";
 import { getJson, postJson } from "../util";
 import { getOtherName } from "../pages/messaging";
-import DOMPurify from "dompurify"; // Import DOMPurify
 
 const Chat = () => {
   const { id } = useParams();
@@ -24,7 +23,7 @@ const Chat = () => {
     bottomChat.current?.scrollIntoView({ behavior: "instant" });
 
     if (userId == undefined || userId == null) return
-    getJson(`http://localhost:8000/api/user/${userId}`, apiToken)
+    getJson(`/api/user/${userId}`, apiToken)
       .then(setUserInfo)
       .catch((error) => {
         console.error("Error fetching user info:", error);
@@ -32,7 +31,7 @@ const Chat = () => {
       });
 
     if (id == undefined) return;
-    getJson(`http://localhost:8000/api/chat/${id}/messages`, apiToken)
+    getJson(`/api/chat/${id}/messages`, apiToken)
       .then((result) => {
         setMessages(result);
       })
@@ -45,7 +44,7 @@ const Chat = () => {
   // getting conversation information
   useEffect(() => {
     if (id == undefined || !userInfo) return;
-    getJson(`http://localhost:8000/api/chat/${id}`, apiToken)
+    getJson(`/api/chat/${id}`, apiToken)
       .then((convo) => {
         setSelectedPerson(getOtherName(userInfo, convo));
         setConversation(convo);
@@ -65,7 +64,7 @@ const Chat = () => {
     if (newMsg.trim() === "" || !selectedPerson || !id || !apiToken) return;
 
     postJson(
-      `http://localhost:8000/api/chat/${id}/messages`,
+      `/api/chat/${id}/messages`,
       { text: newMsg },
       apiToken
     )
@@ -139,11 +138,7 @@ const Chat = () => {
                       : selectedPerson}
                   </strong>
                   :&nbsp;
-                  <span
-                    dangerouslySetInnerHTML={{
-                      __html: DOMPurify.sanitize(m.text),
-                    }}
-                  />
+                  <span>{m.text}</span>
                 </p>
               </div>
             ))}

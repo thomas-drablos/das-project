@@ -4,7 +4,6 @@ import { getJson } from "../util";
 import { useNavigate } from "react-router-dom";
 import { useAppUser } from "../contexts/appUserContext";
 import { useApiToken } from "../contexts/apiTokenContext";
-import DOMPurify from "dompurify"; // Import DOMPurify
 import "./AllVendors.css"; // Import a CSS file for this component
 
 const AllVendors = () => {
@@ -15,7 +14,7 @@ const AllVendors = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    getJson(`http://localhost:8000/api/vendor/`).then((data) => {
+    getJson(`/api/vendor/`).then((data) => {
       if (Array.isArray(data)) {
         setAll(
           data.filter((vendor) => vendor.photos && vendor.photos.length > 0)
@@ -26,7 +25,7 @@ const AllVendors = () => {
 
   useEffect(() => {
     if (apiToken != undefined) {
-      getJson(`http://localhost:8000/api/user/${userId}`, apiToken).then(
+      getJson(`/api/user/${userId}`, apiToken).then(
         setUserInfo
       );
     }
@@ -38,7 +37,7 @@ const AllVendors = () => {
       userInfo.isAdmin &&
       apiToken != undefined
     ) {
-      getJson(`http://localhost:8000/api/vendor/${userId}/all`, apiToken).then(
+      getJson(`/api/vendor/${userId}/all`, apiToken).then(
         (data) => {
           if (Array.isArray(data)) {
             setAll(
@@ -65,11 +64,9 @@ const AllVendors = () => {
           className="vendor-name-item" // Add this class
           style={{ cursor: "pointer" }} // Ensure it looks clickable
         >
-          <div
-            dangerouslySetInnerHTML={{
-              __html: DOMPurify.sanitize(vendor.name),
-            }}
-          />
+          <div>
+            {vendor.name}
+          </div>
         </div>
       ))}
     </>

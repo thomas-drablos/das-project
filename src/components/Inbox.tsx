@@ -4,7 +4,6 @@ import { useAppUser } from "../contexts/appUserContext";
 import { useApiToken } from "../contexts/apiTokenContext";
 import { getJson } from "../util";
 import { getOtherName } from "../pages/messaging";
-import DOMPurify from "dompurify"; // Import DOMPurify
 
 const Inbox = () => {
   const { id } = useParams();
@@ -19,10 +18,10 @@ const Inbox = () => {
   // getting the user and all conversation information
   useEffect(() => {
     if (userId == undefined) return
-    getJson(`http://localhost:8000/api/user/${userId}`, apiToken).then(
+    getJson(`/api/user/${userId}`, apiToken).then(
       setUserInfo
     );
-    getJson(`http://localhost:8000/api/chat`, apiToken)
+    getJson(`/api/chat`, apiToken)
       .then((result) => {
         setConversations(result);
       })
@@ -59,11 +58,7 @@ const Inbox = () => {
             }}
           >
             {/* Sanitize the name obtained from getOtherName */}
-            <span
-              dangerouslySetInnerHTML={{
-                __html: DOMPurify.sanitize(getOtherName(userInfo, conv) || ""),
-              }}
-            />
+            <span>{getOtherName(userInfo, conv)}</span>
           </li>
         ))}
       </ul>

@@ -30,7 +30,7 @@ const User: React.FC = () => {
   const handleVendor = async () => {
     if (typeof userInfo === "object" && userInfo.vendorId == null) {
       await postJson(
-        `http://localhost:8000/api/vendor/create`,
+        `/api/vendor/create`,
         { name: userInfo.name },
         apiToken
       ).then((vendor: any) => {
@@ -46,7 +46,7 @@ const User: React.FC = () => {
     if (!cleanUrl) return;
 
     patchJson(
-      `http://localhost:8000/api/user/${userId}/${userId}/profile-pic`,
+      `/api/user/${userId}/${userId}/profile-pic`,
       { profilePic: cleanUrl },
       apiToken
     ).then(() => {
@@ -161,7 +161,7 @@ const User: React.FC = () => {
             onBlur={() => {
               const sanitizedNewName = DOMPurify.sanitize(newName); // Sanitize before sending
               patchJson(
-                `http://localhost:8000/api/user/${userId}/name`,
+                `/api/user/${userId}/name`,
                 { name: sanitizedNewName },
                 apiToken
               ).then(() => {
@@ -174,11 +174,7 @@ const User: React.FC = () => {
         ) : (
           <>
             <h2>
-              <span
-                dangerouslySetInnerHTML={{
-                  __html: DOMPurify.sanitize(userInfo.name || ""),
-                }}
-              />
+              <span>{userInfo.name}</span>
               <i
                 className="fas fa-pen"
                 style={{ marginLeft: 5, color: "#888", fontSize: "0.6em" }}

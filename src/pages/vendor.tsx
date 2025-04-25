@@ -279,7 +279,7 @@ const VendorPage: React.FC = () => {
                       />
                     </>
                   ) : (
-                    <>{DOMPurify.sanitize(vendor.name || "")}</>
+                    <>{vendor.name || ""}</>
                   )}
                 </h2>
               </div>

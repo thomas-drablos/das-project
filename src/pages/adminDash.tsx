@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { useAppUser } from "../contexts/appUserContext";
 import { useApiToken } from "../contexts/apiTokenContext";
 import { getJson, patchJson } from "../util";
-import DOMPurify from "dompurify";
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -16,7 +15,7 @@ const AdminDashboard: React.FC = () => {
 
   useEffect(() => {
     if (apiToken != undefined && userId != undefined) {
-      getJson(`http://localhost:8000/api/user/${userId}`, apiToken).then(
+      getJson(`/api/user/${userId}`, apiToken).then(
         setUserInfo
       );
     }
@@ -28,10 +27,10 @@ const AdminDashboard: React.FC = () => {
       userInfo.isAdmin &&
       apiToken != undefined
     ) {
-      getJson(`http://localhost:8000/api/vendor/${userId}/all`, apiToken).then(
+      getJson(`/api/vendor/${userId}/all`, apiToken).then(
         setVendors
       );
-      getJson(`http://localhost:8000/api/user/${userId}/all`, apiToken).then(
+      getJson(`/api/user/${userId}/all`, apiToken).then(
         setUsers
       );
     }
@@ -49,7 +48,7 @@ const AdminDashboard: React.FC = () => {
       updatedVendors[index] = { ...updatedVendors[index], hidden: !isHidden };
 
       patchJson(
-        `http://localhost:8000/api/vendor/${vendors[index]._id}/hide`,
+        `/api/vendor/${vendors[index]._id}/hide`,
         {},
         apiToken
       ).then(() => setVendors(updatedVendors));
@@ -60,7 +59,7 @@ const AdminDashboard: React.FC = () => {
       const updatedUsers = [...users];
       updatedUsers[index] = { ...updatedUsers[index], hidden: !isHidden };
       patchJson(
-        `http://localhost:8000/api/user/${userId}/${users[index]._id}/hide`,
+        `/api/user/${userId}/${users[index]._id}/hide`,
         {},
         apiToken
       ).then(() => {
@@ -124,12 +123,7 @@ const AdminDashboard: React.FC = () => {
                   onClick={() => navigate(`/user/${user.id}`)}
                   style={{ cursor: "pointer", textDecoration: "underline" }}
                 >
-                  <span
-                    dangerouslySetInnerHTML={{
-                      __html: DOMPurify.sanitize(user.name || ""),
-                    }}
-                  />{" "}
-                  – <em>{user.email}</em>
+                  {user.name} {'–'}<em>{user.email}</em>
                 </span>
                 <button
                   className={`btn btn-sm ${
@@ -165,11 +159,7 @@ const AdminDashboard: React.FC = () => {
                   onClick={() => navigate(`/vendor/${vendor._id}`)}
                   style={{ cursor: "pointer", textDecoration: "underline" }}
                 >
-                  <span
-                    dangerouslySetInnerHTML={{
-                      __html: DOMPurify.sanitize(vendor.name || ""),
-                    }}
-                  />
+                  <span>{vendor.name}</span>
                 </span>
                 <button
                   className={`btn btn-sm ${

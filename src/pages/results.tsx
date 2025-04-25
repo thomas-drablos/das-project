@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, Button } from "react-bootstrap";
 import { getJson } from "../util";
-import DOMPurify from "dompurify"; // Import DOMPurify
 
 const Results: React.FC = () => {
   const { query } = useParams();
@@ -11,7 +10,7 @@ const Results: React.FC = () => {
 
   useEffect(() => {
     if (!query) return;
-    getJson(`http://localhost:8000/api/vendor/results/${query}`).then(
+    getJson(`/api/vendor/results/${query}`).then(
       setResults
     );
   }, [query]);
@@ -26,27 +25,15 @@ const Results: React.FC = () => {
               <Card className="mb-4">
                 <Card.Body>
                   <Card.Title>
-                    <span
-                      dangerouslySetInnerHTML={{
-                        __html: DOMPurify.sanitize(vendor.name || ""),
-                      }}
-                    />
+                    <span>{vendor.name}</span>
                   </Card.Title>
                   <Card.Text>
-                    <span
-                      dangerouslySetInnerHTML={{
-                        __html: DOMPurify.sanitize(vendor.description || ""),
-                      }}
-                    />
+                    <span>{vendor.description}</span>
                   </Card.Text>
                   <div className="mb-2">
                     {vendor.tags.map((tag: string) => (
                       <span className="badge bg-secondary me-2" key={tag}>
-                        <span
-                          dangerouslySetInnerHTML={{
-                            __html: DOMPurify.sanitize(tag || ""),
-                          }}
-                        />
+                        <span>{tag}</span>
                       </span>
                     ))}
                   </div>

@@ -2,7 +2,6 @@
 import React, { useState, ChangeEvent, FormEvent, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { getJson } from "../util";
-import DOMPurify from "dompurify"; // Import DOMPurify
 import "./SearchBar.css"; // Import the CSS file
 
 const SearchBar: React.FC = () => {
@@ -32,7 +31,7 @@ const SearchBar: React.FC = () => {
       return;
     }
     const response = getJson(
-      `http://localhost:8000/api/vendor/suggestions/${value}/${searchType}`
+      `/api/vendor/suggestions/${value}/${searchType}`
     );
     response.then((results) => {
       setSuggestions(results);
@@ -113,11 +112,7 @@ const SearchBar: React.FC = () => {
               }}
               style={{ cursor: "pointer" }}
             >
-              <span
-                dangerouslySetInnerHTML={{
-                  __html: DOMPurify.sanitize(s || ""),
-                }}
-              />
+              <span>{s}</span>
             </li>
           ))}
         </ul>

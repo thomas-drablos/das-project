@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { Link } from "react-router-dom";
 import { useAppUser } from "../contexts/appUserContext";
-import DOMPurify from "dompurify"; // Import DOMPurify
 
 const NavBar: React.FC = () => {
   const { loginWithRedirect, logout, isAuthenticated } = useAuth0();
@@ -39,11 +38,7 @@ const NavBar: React.FC = () => {
                 {user.loading ? (
                   "..."
                 ) : (
-                  <span
-                    dangerouslySetInnerHTML={{
-                      __html: DOMPurify.sanitize(user.name || "User"),
-                    }}
-                  />
+                  <span>{user.name}</span>
                 )}
               </button>
               {dropdownOpen && (
