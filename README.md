@@ -49,7 +49,7 @@ const API_IS_USING_HTTPS = true;
 4. Then, clear out the cache of your web-browser. Note that if you have previously ran the project with HTTPS disabled, then old items stored within your browser's cache may still be present and will need to be cleared out as they will prevent the application from working properly.
 5. Lastly, close out of all instances of web-browsers on your machine. This is required to ensure that the new certificates are recognized by the browser.
 
-At this point, the certificate should be trusted by your computer and you should be able to navigate to [`https://localhost:5173`](https://localhost:5173) to view the project after going through the same setps to run the two components of the project as before. For a reminder of the steps, please see the following:
+At this point, the certificate should be trusted by your computer and you should be able to navigate to [`https://localhost:5173`](https://localhost:5173) to view the project after going through the same setps to run the two components of the project as before. Note that we <u>**strongly encourage**</u> that you use Chrome when running the project in HTTPS mode as other browsers behave differently for trusted self-certified certificates. For a reminder of the steps, please see the following:
 
 > Within the root of this project, run the following commands in your terminal:
 > ```cmd
@@ -65,7 +65,7 @@ At this point, the certificate should be trusted by your computer and you should
 > ```
 
 ### Clean Up
-Lastly, when you are done testing the project, please **remove** the trusted certificates from the Microsoft Management Console. This is critical to ensure that your computer stays secure after you have finished testing the project. To do so, simply navigate into the `Console Root` > `Trusted Root Certification Authroities` > `Certificates` and find the two certificates that are labeled `localhost`. If you are having a hard time finding this, these should have an expiration date of `04/21/2026`. At this point, you can close out of the Microosft Management Console. 
+Lastly, when you are done testing the project, please **remove** the trusted certificates from the Microsoft Management Console. This is critical to ensure that your computer stays secure after you have finished testing the project. To do so, simply navigate into the `Console Root` > `Trusted Root Certification Authorities` > `Certificates` and find the two certificates that are labeled `localhost`. If you are having a hard time finding this, these should have an expiration date of `04/21/2026`. At this point, you can close out of the Microosft Management Console. 
 
 ## Authors
 The project was completed, in whole, by the following students:
