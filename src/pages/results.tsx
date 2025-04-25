@@ -1,65 +1,52 @@
-// src/pages/Results.tsx
-import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { Card, Button } from "react-bootstrap";
+import { getJson } from "../util";
 
 const Results: React.FC = () => {
-  const params = useParams<Record<string, string | undefined>>();
-  const [results, setResults] = useState<any[]>([]); // Replace 'any' with your data type
+  const { query } = useParams();
+  const navigate = useNavigate();
+  const [results, setResults] = useState<any>(null);
 
   useEffect(() => {
-    if (params.query) {
-      // Simulate fetching results from an API or local data
-      const fetchResults = async () => {
-        // Replace this with your actual data fetching logic
-        const simulatedResults = [
-          {
-            id: 1,
-            name: `Product ${params.query} 1`,
-            description: "Description 1",
-          },
-          {
-            id: 2,
-            name: `Product ${params.query} 2`,
-            description: "Description 2",
-          },
-          {
-            id: 3,
-            name: `Vendor ${params.query} 1`,
-            description: "Description 3",
-          },
-          {
-            id: 4,
-            name: `Vendor ${params.query} 2`,
-            description: "Description 4",
-          },
-        ].filter((result) =>
-          result.name.toLowerCase().includes(params.query!.toLowerCase())
-        );
-
-        setResults(simulatedResults);
-      };
-
-      fetchResults();
-    } else {
-      setResults([]);
-    }
-  }, [params.query]);
+    if (!query) return;
+    getJson(`/api/vendor/results/${query}`).then(
+      setResults
+    );
+  }, [query]);
 
   return (
-    <div>
-      <h1>Results for "{params.query}"</h1>
-      {results.length > 0 ? (
-        <ul>
-          {results.map((result) => (
-            <li key={result.id}>
-              <h2>{result.name}</h2>
-              <p>{result.description}</p>
-              {/* Add links to vendor or product pages here */}
-            </li>
+    <div className="container mt-5">
+      <h2>Results for "{query}"</h2>
+      {results != null ? (
+        <div className="row">
+          {results.map((vendor: any) => (
+            <div className="col-md-6" key={vendor.id}>
+              <Card className="mb-4">
+                <Card.Body>
+                  <Card.Title>
+                    <span>{vendor.name}</span>
+                  </Card.Title>
+                  <Card.Text>
+                    <span>{vendor.description}</span>
+                  </Card.Text>
+                  <div className="mb-2">
+                    {vendor.tags.map((tag: string) => (
+                      <span className="badge bg-secondary me-2" key={tag}>
+                        <span>{tag}</span>
+                      </span>
+                    ))}
+                  </div>
+                  <Button onClick={() => navigate(`/vendor/${vendor._id}`)}>
+                    View Vendor
+                  </Button>
+                </Card.Body>
+              </Card>
+            </div>
           ))}
-        </ul>
+        </div>
       ) : (
-        <p>No results found.</p>
+        <p>No vendors found.</p>
       )}
     </div>
   );

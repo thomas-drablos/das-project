@@ -1,0 +1,5 @@
+/* src/components/AllVendors.css */
+
+.vendor-name-item:hover {
+    color: #ec7524; /* UTD Orange - you can choose any color you like */
+  }

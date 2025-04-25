@@ -18,8 +18,19 @@ export async function postJson<T>(url: string, payload: unknown, authToken?: str
   })
 }
 
+export async function patchJson<T>(url: string, payload: unknown, authToken?: string): Promise<T> {
+  return await request(url, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(authToken && {Authorization: `Bearer ${authToken}`}),
+    },
+    body: JSON.stringify(payload),
+  })
+}
+
 interface RequestProps {
-  method: 'GET' | 'POST';
+  method: 'GET' | 'POST' | 'PATCH';
   headers?: {[k: string]: string}
   body?: string;
 }

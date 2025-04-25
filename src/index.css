@@ -1,5 +1,5 @@
 :root {
-  font-family: 'Merienda', Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'Rubik', sans-serif !important;
   line-height: 1.5;
   font-weight: 400;
 
@@ -27,12 +27,17 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  font-family: 'Merienda', cursive, sans-serif !important;
+  font-family: 'Rubik', cursive, sans-serif !important;
 }
 
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
+}
+
+.heading-center {
+  text-align: center;
+  margin-bottom: 20px;
 }
 
 button {

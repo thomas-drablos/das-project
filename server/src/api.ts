@@ -1,20 +1,22 @@
 import { Router, Request, Response, NextFunction } from 'express';
 // import { Request } from 'express-session';
 import User from './models/user';
-import Chat from './models/chat';
-import Invoice from './models/invoice';
-import Login from './models/login';
-import Message from './models/message';
-import Review from './models/review';
-import Vendor from './models/vendor';
 
 import { requireAuth } from './auth';
 import UserController from './userController';
+import VendorController from './vendorController';
+import ReviewController from './reviewController';
 import { randomUUID } from 'crypto';
+import ChatController from './chatController';
+import MessageController from './messageController';
 
 const router: Router = Router();
 
 router.use('/user/:id', UserController);
+router.use('/vendor', VendorController);
+router.use('/review', ReviewController);
+router.use('/chat', ChatController);
+router.use('/message', MessageController)
 
 router.get('/userinfo', requireAuth, async (req: Request, res: Response) => {
     const id = req.auth!.payload.sub!;
@@ -79,42 +81,5 @@ router.post('/register', requireAuth, async (req: Request, res: Response) => {
     });
 });
 
-router.get('/chat', async (req: Request, res: Response) => {
-    const c = new Chat({
-        time: new Date()
-      });
-    await c.save();
-});
-
-router.get('/invoice', async (req: Request, res: Response) => {
-    const i = new Invoice({
-        specs: "Painting of my dog pls :P"
-      });
-    await i.save();
-});
-
-router.get('/message', async (req: Request, res: Response) => {
-    const m = new Message({
-        text: "Hello!"
-      });
-    await m.save();
-});
-
-router.get('/review', async (req: Request, res: Response) => {
-    const r = new Review({
-        text: "This sucked", 
-        rating: 0,
-        time: new Date()
-      });
-    await r.save();
-});
-
-router.get('/vendor', async (req: Request, res: Response) => {
-    const v = new Vendor({
-        name: "Store owner", 
-        description: "This is my store, which I own."
-      });
-    await v.save();
-});
 
 export default router;

@@ -18,6 +18,7 @@
     "bootstrap": "^5.3.5",
     "bulma": "^1.0.3",
     "classnames": "^2.5.1",
+    "dompurify": "^3.2.5",
     "mongoose": "^8.13.2",
     "react": "^19.0.0",
     "react-bootstrap": "^2.10.9",
